@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { Fixture, Scenario, Standing } from "@/types";
 import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import ClusterPicker from "@/components/ClusterPicker";
+import FixtureGrid from "@/components/FixtureGrid";
+import LiveTable from "@/components/LiveTable";
+import ShareBar from "@/components/ShareBar";
+import SavedScenarios, { loadSaved, persistSaved } from "@/components/SavedScenarios";
 
 interface Props {
   standings: Standing[];
@@ -13,6 +17,7 @@ interface Props {
 
 export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Props) {
   const [scenario, setScenario] = useState<Scenario>({ cluster: [], outcomes: {} });
+  const [savedRefresh, setSavedRefresh] = useState(0);
 
   useEffect(() => {
     setScenario(decodeScenario(window.location.hash));
@@ -20,6 +25,14 @@ export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Prop
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
+
+  function handleSave(name: string) {
+    const items = loadSaved();
+    const hash = encodeScenario(scenario);
+    const next = [{ name, hash, savedAt: new Date().toISOString() }, ...items.filter((i) => i.name !== name)].slice(0, 20);
+    persistSaved(next);
+    setSavedRefresh((r) => r + 1);
+  }
 
   function updateScenario(next: Scenario) {
     setScenario(next);
@@ -69,19 +82,36 @@ export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Prop
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-zinc-400">
           Fixtures
         </h2>
-        <p className="text-sm text-zinc-500">FixtureGrid goes here (Task 14).</p>
+        <FixtureGrid
+          fixtures={remainingFixtures}
+          cluster={scenario.cluster}
+          outcomes={scenario.outcomes}
+          standings={standings}
+          onChange={(outcomes) => updateScenario({ ...scenario, outcomes })}
+        />
       </section>
 
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-zinc-400">
           Projected table
         </h2>
-        <p className="text-sm text-zinc-500">LiveTable goes here (Task 15).</p>
+        <LiveTable
+          base={standings}
+          fixtures={fixtures}
+          outcomes={scenario.outcomes}
+          cluster={scenario.cluster}
+        />
       </section>
 
-      <pre className="overflow-auto rounded bg-zinc-900 p-3 text-xs">
-        {JSON.stringify(scenario, null, 2)}
-      </pre>
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Share</h2>
+        <ShareBar scenario={scenario} onSave={handleSave} />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Saved scenarios</h2>
+        <SavedScenarios refreshKey={savedRefresh} />
+      </section>
     </div>
   );
 }
