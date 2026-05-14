@@ -73,11 +73,11 @@ function TeamCell({ team, align }: { team: Fixture["homeTeam"]; align: "left" | 
   return (
     <div className={"flex flex-1 items-center gap-2 min-w-0 " + (align === "right" ? "justify-end" : "")}>
       {align === "left" && team.crest && (
-        <Image src={team.crest} alt="" width={20} height={20} unoptimized />
+        <Image src={team.crest} alt="" width={20} height={20} unoptimized suppressHydrationWarning />
       )}
       <span className="truncate text-sm">{team.shortName}</span>
       {align === "right" && team.crest && (
-        <Image src={team.crest} alt="" width={20} height={20} unoptimized />
+        <Image src={team.crest} alt="" width={20} height={20} unoptimized suppressHydrationWarning />
       )}
     </div>
   );

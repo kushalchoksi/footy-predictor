@@ -100,6 +100,7 @@ export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Prop
           fixtures={fixtures}
           outcomes={scenario.outcomes}
           cluster={scenario.cluster}
+          onClusterChange={(cluster) => updateScenario({ ...scenario, cluster })}
         />
       </section>
 
