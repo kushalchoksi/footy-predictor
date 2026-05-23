@@ -25,12 +25,10 @@ export default async function Page() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <ScenarioBuilder
-        standings={standings}
-        fixtures={fixtures}
-        fetchedAt={new Date().toISOString()}
-      />
-    </main>
+    <ScenarioBuilder
+      standings={standings}
+      fixtures={fixtures}
+      fetchedAt={new Date().toISOString()}
+    />
   );
 }

@@ -40,6 +40,9 @@ export type OutcomeKind = "H" | "D" | "A";
 export interface Outcome {
   kind: OutcomeKind;
   locked: boolean;
+  /** Optional explicit scoreline. When absent, fallback +1/0 GD model is used. */
+  homeScore?: number;
+  awayScore?: number;
 }
 
 // Map fixtureId -> Outcome. Absent entries are "unset".

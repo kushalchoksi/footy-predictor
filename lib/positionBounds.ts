@@ -117,23 +117,46 @@ function computeBoundaries(
     const away = out.get(fix.awayTeam.id);
 
     if (outcome?.locked) {
+      // When the locked outcome has an explicit scoreline, use actual GD/GF deltas.
+      const hs = outcome.homeScore;
+      const as_ = outcome.awayScore;
+      const hasScore = hs !== undefined && as_ !== undefined;
+
       if (outcome.kind === "H") {
         if (home) {
           home.maxPts += 3; home.minPts += 3;
-          home.maxGd += 1; home.minGd += 1;
-          home.maxGf += 1; home.minGf += 1;
+          const gdDelta = hasScore ? hs! - as_! : 1;
+          const gfDelta = hasScore ? hs! : 1;
+          home.maxGd += gdDelta; home.minGd += gdDelta;
+          home.maxGf += gfDelta; home.minGf += gfDelta;
         }
-        if (away) { away.maxGd -= 1; away.minGd -= 1; }
+        if (away) {
+          const gdDelta = hasScore ? as_! - hs! : -1;
+          away.maxGd += gdDelta; away.minGd += gdDelta;
+          if (hasScore) { away.maxGf += as_!; away.minGf += as_!; }
+        }
       } else if (outcome.kind === "A") {
         if (away) {
           away.maxPts += 3; away.minPts += 3;
-          away.maxGd += 1; away.minGd += 1;
-          away.maxGf += 1; away.minGf += 1;
+          const gdDelta = hasScore ? as_! - hs! : 1;
+          const gfDelta = hasScore ? as_! : 1;
+          away.maxGd += gdDelta; away.minGd += gdDelta;
+          away.maxGf += gfDelta; away.minGf += gfDelta;
         }
-        if (home) { home.maxGd -= 1; home.minGd -= 1; }
+        if (home) {
+          const gdDelta = hasScore ? hs! - as_! : -1;
+          home.maxGd += gdDelta; home.minGd += gdDelta;
+          if (hasScore) { home.maxGf += hs!; home.minGf += hs!; }
+        }
       } else {
-        if (home) { home.maxPts += 1; home.minPts += 1; }
-        if (away) { away.maxPts += 1; away.minPts += 1; }
+        if (home) {
+          home.maxPts += 1; home.minPts += 1;
+          if (hasScore) { home.maxGf += hs!; home.minGf += hs!; home.maxGd += hs! - as_!; home.minGd += hs! - as_!; }
+        }
+        if (away) {
+          away.maxPts += 1; away.minPts += 1;
+          if (hasScore) { away.maxGf += as_!; away.minGf += as_!; away.maxGd += as_! - hs!; away.minGd += as_! - hs!; }
+        }
       }
     } else {
       if (home) {

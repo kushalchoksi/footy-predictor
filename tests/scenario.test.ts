@@ -91,4 +91,54 @@ describe("projectStandings", () => {
     const { standings } = projectStandings(base, fix, outcomes);
     expect(standings.find((s) => s.team.id === 65)!.points).toBe(82); // unchanged
   });
+
+  it("uses explicit scoreline for GF/GA when provided", () => {
+    const fix = [fixture(7, arsenal, city, 37)];
+    const outcomes: OutcomeMap = { 7: { kind: "H", locked: false, homeScore: 3, awayScore: 1 } };
+    const { standings } = projectStandings(base, fix, outcomes);
+    const ars = standings.find((s) => s.team.id === 57)!;
+    const mci = standings.find((s) => s.team.id === 65)!;
+    expect(ars.goalsFor).toBe(83);     // 80 + 3
+    expect(ars.goalsAgainst).toBe(31); // 30 + 1
+    expect(ars.points).toBe(83);       // win = 3 pts
+    expect(mci.goalsFor).toBe(91);     // 90 + 1
+    expect(mci.goalsAgainst).toBe(38); // 35 + 3 (City conceded Arsenal's homeScore=3)
+  });
+
+  it("records explicit goals in H2H map", () => {
+    const fix = [fixture(8, arsenal, city, 37)];
+    const outcomes: OutcomeMap = { 8: { kind: "A", locked: false, homeScore: 0, awayScore: 2 } };
+    const { h2h } = projectStandings(base, fix, outcomes);
+    const entry = h2h[pairKey(57, 65)];
+    expect(entry).toBeDefined();
+    // Arsenal is the lower-id team; lost 0-2. So lowGoals=0, highGoals=2.
+    expect(entry.lowGoals).toBe(0);
+    expect(entry.highGoals).toBe(2);
+    expect(entry.lowPts).toBe(0);
+    expect(entry.highPts).toBe(3);
+  });
+
+  it("ignores contradictory scoreline and falls back to +1 model", () => {
+    // kind=A says away wins but score 2-1 says home wins. Trust kind, ignore scoreline.
+    const fix = [fixture(9, arsenal, city, 37)];
+    const outcomes: OutcomeMap = { 9: { kind: "A", locked: false, homeScore: 2, awayScore: 1 } };
+    const { standings } = projectStandings(base, fix, outcomes);
+    const mci = standings.find((s) => s.team.id === 65)!;
+    // Falls back to +1 model: away win gives +1 GF to away, +1 GA to home.
+    expect(mci.goalsFor).toBe(91);
+    expect(mci.points).toBe(85);
+  });
+
+  it("draw scoreline still applies actual goals", () => {
+    const fix = [fixture(10, arsenal, city, 37)];
+    const outcomes: OutcomeMap = { 10: { kind: "D", locked: false, homeScore: 2, awayScore: 2 } };
+    const { standings } = projectStandings(base, fix, outcomes);
+    const ars = standings.find((s) => s.team.id === 57)!;
+    const mci = standings.find((s) => s.team.id === 65)!;
+    expect(ars.goalsFor).toBe(82);
+    expect(ars.goalsAgainst).toBe(32);
+    expect(ars.points).toBe(81); // draw = 1 pt
+    expect(mci.goalsFor).toBe(92);
+    expect(mci.goalsAgainst).toBe(37);
+  });
 });

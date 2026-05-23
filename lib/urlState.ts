@@ -36,7 +36,12 @@ export function decodeScenario(raw: string): Scenario {
 }
 
 function encodeOutcome(o: Outcome): string {
-  return o.locked ? "L" + o.kind : o.kind;
+  const prefix = o.locked ? "L" : "";
+  const scoreSuffix =
+    o.homeScore !== undefined && o.awayScore !== undefined
+      ? `-${o.homeScore}-${o.awayScore}`
+      : "";
+  return prefix + o.kind + scoreSuffix;
 }
 
 function decodeOutcome(code: string): Outcome | null {
@@ -46,6 +51,30 @@ function decodeOutcome(code: string): Outcome | null {
     locked = true;
     body = body.slice(1);
   }
-  if (!VALID_KINDS.includes(body as OutcomeKind)) return null;
-  return { kind: body as OutcomeKind, locked };
+
+  // Separate kind (first char) from optional score suffix (-N-M).
+  const dashIdx = body.indexOf("-");
+  const kindStr = dashIdx === -1 ? body : body.slice(0, dashIdx);
+  const scorePart = dashIdx === -1 ? "" : body.slice(dashIdx + 1);
+
+  if (!VALID_KINDS.includes(kindStr as OutcomeKind)) return null;
+
+  const outcome: Outcome = { kind: kindStr as OutcomeKind, locked };
+
+  if (scorePart) {
+    // scorePart is "N-M"; split on the single dash.
+    const parts = scorePart.split("-");
+    if (parts.length === 2) {
+      const hs = Number(parts[0]);
+      const as_ = Number(parts[1]);
+      if (Number.isInteger(hs) && hs >= 0 && Number.isInteger(as_) && as_ >= 0) {
+        outcome.homeScore = hs;
+        outcome.awayScore = as_;
+      }
+      // If parse fails, omit scores (malformed suffix treated as absent).
+    }
+    // If parts.length !== 2, malformed — omit scores.
+  }
+
+  return outcome;
 }
