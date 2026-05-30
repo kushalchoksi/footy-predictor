@@ -137,6 +137,36 @@ export const COMPETITIONS: Competition[] = [
       { positions: [17, 18, 19, 20],   label: "Relegation",         color: "relegation" },
     ],
   },
+  {
+    code: "CL",
+    name: "UEFA Champions League",
+    country: "Europe",
+    emblem: "https://crests.football-data.org/CL.png",
+    format: "tournament",
+    tiebreaker: "uefa",
+    season: { startYear: 2025, label: "2025/26" },
+    groupCount: 8,
+  },
+  {
+    code: "EC",
+    name: "European Championship",
+    country: "International",
+    emblem: "https://crests.football-data.org/EC.png",
+    format: "tournament",
+    tiebreaker: "uefa",
+    season: { startYear: 2024, label: "Euro 2024" },
+    groupCount: 6,
+  },
+  {
+    code: "WC",
+    name: "FIFA World Cup",
+    country: "International",
+    emblem: "https://crests.football-data.org/WC.png",
+    format: "tournament",
+    tiebreaker: "fifa",
+    season: { startYear: 2026, label: "World Cup 2026" },
+    groupCount: 12,
+  },
 ];
 
 export function getCompetition(code: string): Competition | undefined {
