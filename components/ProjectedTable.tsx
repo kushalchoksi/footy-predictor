@@ -1,15 +1,16 @@
 "use client";
 
-import type { Fixture, OutcomeMap, Standing, TeamId } from "@/types";
+import type { Competition, Fixture, OutcomeMap, Standing, TeamId } from "@/types";
 import TeamCrest from "@/components/TeamCrest";
 import { projectStandings } from "@/lib/scenario";
-import { sortByEPL } from "@/lib/tiebreakers";
+import { sortByChain, CHAINS } from "@/lib/tiebreakers";
 import { computeRanges } from "@/lib/ranges";
 import { detectDecided, type DecidedFlags } from "@/lib/decided";
 import { computePositionInfo } from "@/lib/positionBounds";
 import { useMemo, useState } from "react";
 
 interface Props {
+  competition: Competition;
   base: Standing[];
   fixtures: Fixture[];
   outcomes: OutcomeMap;
@@ -31,13 +32,16 @@ function bandFor(pos: number): string {
   return BAND_CLASSES.find((b) => b.test(pos))!.cls;
 }
 
-export default function ProjectedTable({ base, fixtures, outcomes, cluster, onClusterChange, filterTeamIds }: Props) {
+export default function ProjectedTable({ competition, base, fixtures, outcomes, cluster, onClusterChange, filterTeamIds }: Props) {
   const clusterSet = useMemo(() => new Set(cluster), [cluster]);
   const filterSet = useMemo(() => filterTeamIds ? new Set(filterTeamIds) : null, [filterTeamIds]);
   const [hoverTeamId, setHoverTeamId] = useState<TeamId | null>(null);
 
   const projected = useMemo(() => projectStandings(base, fixtures, outcomes), [base, fixtures, outcomes]);
-  const sorted = useMemo(() => sortByEPL(projected.standings, projected.h2h), [projected]);
+  const sorted = useMemo(
+    () => sortByChain(projected.standings, projected.h2h, CHAINS[competition.tiebreaker]),
+    [projected, competition],
+  );
 
   const ranges = useMemo(() => {
     const map = new Map<TeamId, number>();
