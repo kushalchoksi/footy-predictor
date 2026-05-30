@@ -1,7 +1,7 @@
 import ScenarioBuilder from "@/components/ScenarioBuilder";
 import { getFixtures, getStandings } from "@/lib/footballData";
 
-export const revalidate = 600;
+export const revalidate = 120;
 
 export default async function Page() {
   let standings, fixtures;

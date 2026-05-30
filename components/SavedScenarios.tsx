@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 export interface SavedScenario {
   name: string;
@@ -67,10 +68,10 @@ export default function SavedScenarios({ refreshKey }: Props) {
           <button
             type="button"
             onClick={() => remove(s.name)}
-            className="rounded text-xs text-zinc-500 hover:text-rose-400"
+            className="flex items-center justify-center rounded p-0.5 text-zinc-500 hover:text-rose-400"
             aria-label={`Delete ${s.name}`}
           >
-            ✕
+            <X size={14} aria-hidden="true" />
           </button>
         </li>
       ))}

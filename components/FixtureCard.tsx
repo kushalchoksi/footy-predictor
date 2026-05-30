@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock, Unlock, X } from "lucide-react";
 import type { Fixture, Outcome, Team } from "@/types";
 import TeamCrest from "@/components/TeamCrest";
 import FlipClockDigit from "@/components/FlipClockDigit";
@@ -51,11 +52,11 @@ export default function FixtureCard({
           <button
             type="button"
             onClick={onToggleLock}
-            className={"rounded px-1 text-[10px] " + (locked ? "bg-emerald-700 text-white" : "bg-zinc-800 text-zinc-400 hover:text-zinc-200")}
+            className={"flex items-center justify-center rounded p-0.5 " + (locked ? "bg-emerald-700 text-white" : "bg-zinc-800 text-zinc-400 hover:text-zinc-200")}
             title={locked ? "Unlock" : "Lock"}
             aria-label={locked ? "Unlock" : "Lock"}
           >
-            {locked ? "🔒" : "🔓"}
+            {locked ? <Lock size={12} aria-hidden="true" /> : <Unlock size={12} aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -102,10 +103,11 @@ export default function FixtureCard({
           <button
             type="button"
             onClick={onClear}
-            className="ml-1 rounded text-[10px] text-zinc-500 hover:text-rose-400"
+            className="ml-1 flex items-center justify-center rounded p-0.5 text-zinc-500 hover:text-rose-400"
             title="Clear pick"
+            aria-label="Clear pick"
           >
-            ✕
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>

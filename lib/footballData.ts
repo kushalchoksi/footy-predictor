@@ -5,7 +5,7 @@ import type { Fixture, Standing, Team } from "@/types";
 
 const BASE = "https://api.football-data.org/v4";
 const COMP = "PL";
-const REVALIDATE_SECONDS = 600;
+const REVALIDATE_SECONDS = 120;
 
 const teamSchema = z.object({
   id: z.number(),
