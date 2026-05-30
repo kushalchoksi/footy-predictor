@@ -31,6 +31,16 @@ const teamSchema = z.object({
   crest: z.string().nullable(),
 });
 
+// Knockout fixtures in tournaments can have unresolved teams (placeholders for
+// winners of feeder ties). The API returns all team fields as null in that case.
+const maybeTeamSchema = z.object({
+  id: z.number().nullable(),
+  name: z.string().nullable(),
+  shortName: z.string().nullable(),
+  tla: z.string().nullable(),
+  crest: z.string().nullable(),
+});
+
 const standingsResponseSchema = z.object({
   standings: z.array(
     z.object({
@@ -57,8 +67,8 @@ const standingsResponseSchema = z.object({
 const matchSchema = z.object({
   id: z.number(),
   matchday: z.number().nullable(),
-  homeTeam: teamSchema,
-  awayTeam: teamSchema,
+  homeTeam: maybeTeamSchema,
+  awayTeam: maybeTeamSchema,
   status: z.string(),
   utcDate: z.string(),
   stage: z.string().nullable().optional(),
@@ -150,11 +160,24 @@ export function getFixtures(code: string): Promise<Fixture[]> {
       const parsed = matchesResponseSchema.parse(raw);
       return parsed.matches
         .filter((m) => m.status === "SCHEDULED" || m.status === "TIMED" || m.status === "FINISHED")
+        .filter((m) => m.homeTeam.id !== null && m.awayTeam.id !== null && m.homeTeam.name !== null && m.awayTeam.name !== null)
         .map((m) => ({
           id: m.id,
           matchday: m.matchday ?? 0,
-          homeTeam: normalizeTeam(m.homeTeam),
-          awayTeam: normalizeTeam(m.awayTeam),
+          homeTeam: normalizeTeam({
+            id: m.homeTeam.id!,
+            name: m.homeTeam.name!,
+            shortName: m.homeTeam.shortName,
+            tla: m.homeTeam.tla,
+            crest: m.homeTeam.crest,
+          }),
+          awayTeam: normalizeTeam({
+            id: m.awayTeam.id!,
+            name: m.awayTeam.name!,
+            shortName: m.awayTeam.shortName,
+            tla: m.awayTeam.tla,
+            crest: m.awayTeam.crest,
+          }),
           status: m.status === "FINISHED" ? "FINISHED" as const : "SCHEDULED" as const,
           homeGoals: m.score.fullTime.home,
           awayGoals: m.score.fullTime.away,
