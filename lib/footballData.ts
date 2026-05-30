@@ -61,6 +61,8 @@ const matchSchema = z.object({
   awayTeam: teamSchema,
   status: z.string(),
   utcDate: z.string(),
+  stage: z.string().nullable().optional(),
+  group: z.string().nullable().optional(),
   score: z.object({
     fullTime: z.object({
       home: z.number().nullable(),
@@ -81,6 +83,24 @@ function normalizeTeam(t: z.infer<typeof teamSchema>): Team {
     tla: t.tla ?? t.name.slice(0, 3).toUpperCase(),
     crest: t.crest ?? "",
   };
+}
+
+function normalizeStage(s: string | null | undefined): import("@/types").TournamentStage | undefined {
+  if (!s) return undefined;
+  switch (s) {
+    case "LEAGUE_STAGE":
+    case "GROUP_STAGE":
+    case "LAST_32":
+    case "LAST_16":
+    case "QUARTER_FINALS":
+    case "SEMI_FINALS":
+    case "FINAL":
+    case "THIRD_PLACE":
+    case "PLAYOFFS":
+      return s;
+    default:
+      return undefined;
+  }
 }
 
 async function fetchFromApi(path: string): Promise<unknown> {
@@ -139,6 +159,8 @@ export function getFixtures(code: string): Promise<Fixture[]> {
           homeGoals: m.score.fullTime.home,
           awayGoals: m.score.fullTime.away,
           utcDate: m.utcDate,
+          group: m.group ?? undefined,
+          stage: normalizeStage(m.stage),
         }));
     },
     [`${code}-fixtures`],

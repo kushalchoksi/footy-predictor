@@ -24,6 +24,13 @@ export interface Standing {
 
 export type FixtureStatus = "SCHEDULED" | "FINISHED";
 
+export type TournamentStage =
+  | "LEAGUE_STAGE"
+  | "GROUP_STAGE"
+  | "LAST_32" | "LAST_16" | "QUARTER_FINALS" | "SEMI_FINALS" | "FINAL"
+  | "THIRD_PLACE"
+  | "PLAYOFFS";
+
 export interface Fixture {
   id: FixtureId;
   matchday: number;
@@ -33,6 +40,9 @@ export interface Fixture {
   homeGoals: number | null;
   awayGoals: number | null;
   utcDate: string;
+  group?: string;
+  stage?: TournamentStage;
+  legNumber?: number;
 }
 
 export type OutcomeKind = "H" | "D" | "A";
@@ -98,11 +108,6 @@ export interface QualificationBand {
   label: string;
   color: BandColor;
 }
-
-export type TournamentStage =
-  | "GROUP_STAGE"
-  | "LAST_16" | "QUARTER_FINALS" | "SEMI_FINALS" | "FINAL"
-  | "PLAYOFFS";
 
 export interface BracketTemplateRound {
   id: string;             // synthetic, e.g. "QF1"
