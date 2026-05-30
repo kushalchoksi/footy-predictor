@@ -3,6 +3,23 @@ import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import type { Fixture, Standing, Team } from "@/types";
 
+// ──────────────────────────────────────────────────────────────────────────
+// Discovered tournament fixture shape (football-data.org v4, verified 2026-05-29):
+//
+// CL (Champions League): NEW SWISS FORMAT — `stage: "LEAGUE_STAGE"`, `group: null`.
+//   A single 36-team league phase with 8 matches per team. Knockout stages:
+//   LEAGUE_STAGE, PLAYOFFS, LAST_16, QUARTER_FINALS, SEMI_FINALS, FINAL.
+//   → No groups. The group-stage projection will return an empty map.
+//
+// EC (Euro 2024): TRADITIONAL — `stage: "GROUP_STAGE"`, `group: "GROUP_A".."GROUP_F"`.
+//   Knockout stages: GROUP_STAGE, LAST_16, QUARTER_FINALS, SEMI_FINALS, FINAL.
+//
+// WC (World Cup 2026): TRADITIONAL — `stage: "GROUP_STAGE"`, `group: "GROUP_A".."GROUP_L"`.
+//   Knockout stages: GROUP_STAGE, LAST_32, LAST_16, QUARTER_FINALS, SEMI_FINALS,
+//                    THIRD_PLACE, FINAL.
+//   → LAST_32 (R32) feeds LAST_16. THIRD_PLACE is a separate one-off tie.
+// ──────────────────────────────────────────────────────────────────────────
+
 const BASE = "https://api.football-data.org/v4";
 const REVALIDATE_SECONDS = 120;
 
