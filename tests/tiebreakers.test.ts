@@ -17,7 +17,7 @@ function s(name: string, id: number, pts: number, gd: number, gf: number): Stand
 }
 
 const emptyH2H: H2HMap = {};
-const ctx = (h2h: H2HMap = emptyH2H): TiebreakContext => ({ h2h, playoffsFlagged: new Set() });
+const ctx = (h2h: H2HMap = emptyH2H): TiebreakContext => ({ h2h, playoffsFlagged: new Set(), awayGoals: new Map() });
 
 describe("compareEPL", () => {
   it("sorts by points first", () => {
