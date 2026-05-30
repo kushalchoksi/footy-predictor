@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Competition, Fixture, Outcome, OutcomeKind, OutcomeMap, Scenario, Standing } from "@/types";
-import { CHAINS } from "@/lib/tiebreakers";
-import { projectGroups } from "@/lib/tournament/groupStage";
+import { projectTournament } from "@/lib/tournament/projection";
 import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import TopBar from "@/components/TopBar";
 import GroupCard from "@/components/GroupCard";
+import Bracket from "@/components/Bracket";
 
 interface Props {
   competition: Competition;
@@ -60,15 +60,26 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
     [fixtures],
   );
 
-  const groups = useMemo(
-    () => projectGroups(standings, groupFixtures, scenario.outcomes, CHAINS[competition.tiebreaker]),
-    [standings, groupFixtures, scenario.outcomes, competition],
+  const projection = useMemo(
+    () => projectTournament(
+      competition,
+      standings,
+      fixtures,
+      scenario.outcomes,
+      scenario.bracketChoices ?? {},
+    ),
+    [competition, standings, fixtures, scenario.outcomes, scenario.bracketChoices],
   );
 
   const totalScheduled = useMemo(() => fixtures.filter((f) => f.status === "SCHEDULED").length, [fixtures]);
   const fixturesLeft = totalScheduled - Object.keys(scenario.outcomes).length;
 
-  const groupNames = [...groups.groupStandings.keys()].sort();
+  function handlePickWinner(tieId: string, teamId: number) {
+    const nextChoices = { ...(scenario.bracketChoices ?? {}), [tieId]: teamId };
+    updateScenario({ ...scenario, bracketChoices: nextChoices });
+  }
+
+  const groupNames = [...projection.groupStandings.keys()].sort();
 
   return (
     <div className="min-h-screen">
@@ -91,8 +102,8 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {groupNames.map((g) => {
-              const groupStandings = groups.groupStandings.get(g) ?? [];
-              const qualified = groups.qualified.get(g) ?? [];
+              const groupStandings = projection.groupStandings.get(g) ?? [];
+              const qualified = projection.qualified.get(g) ?? [];
               const fixturesForGroup = groupFixtures.filter((f) =>
                 (f.group ?? (f.stage === "LEAGUE_STAGE" ? "LEAGUE_PHASE" : "")) === g
               );
@@ -112,10 +123,50 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
           </section>
         )}
 
-        <section className="rounded border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400">
-          Knockout bracket lands in Phase 4.
+        <section className="space-y-2">
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Knockout bracket</h2>
+          <Bracket
+            ties={projection.bracket}
+            choices={scenario.bracketChoices ?? {}}
+            onPick={handlePickWinner}
+          />
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Finishing positions</h2>
+          <FinishingPositions projection={projection} />
         </section>
       </main>
     </div>
+  );
+}
+
+function FinishingPositions({ projection }: { projection: ReturnType<typeof projectTournament> }) {
+  const entries = [...projection.finishingPositions.entries()];
+  // Build a team-id → team lookup from groupStandings (covers every team in the tournament).
+  const teams = new Map<number, { id: number; shortName: string; name: string; tla: string; crest: string }>();
+  for (const standings of projection.groupStandings.values()) {
+    for (const s of standings) teams.set(s.team.id, s.team);
+  }
+  const order = ["Winner", "Runner-up", "SF", "QF", "R16", "R32", "Playoffs", "League phase", "Group stage"];
+  entries.sort((a, b) => {
+    const aIdx = order.indexOf(a[1]); const bIdx = order.indexOf(b[1]);
+    const aFinal = aIdx === -1 ? order.length : aIdx;
+    const bFinal = bIdx === -1 ? order.length : bIdx;
+    return aFinal - bFinal;
+  });
+  return (
+    <ul className="grid grid-cols-2 gap-1 text-xs sm:grid-cols-3 lg:grid-cols-4">
+      {entries.map(([id, pos]) => {
+        const t = teams.get(id);
+        if (!t) return null;
+        return (
+          <li key={id} className="flex items-center justify-between rounded border border-zinc-800 bg-zinc-950 px-2 py-1">
+            <span className="truncate">{t.shortName}</span>
+            <span className="text-zinc-500">{pos}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
