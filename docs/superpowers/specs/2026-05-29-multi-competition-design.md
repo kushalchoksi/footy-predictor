@@ -125,6 +125,13 @@ export interface Competition {
   season: { startYear: number; label: string };
   bands?: QualificationBand[]; // leagues only
   groupCount?: number;         // tournaments only
+  bracketTemplate?: BracketTemplate;  // tournaments only — feeder pattern per round
+}
+
+export interface BracketTemplate {
+  // For each round, the ordered list of synthetic tie ids and which feeder ties produce their teams.
+  // e.g. { LAST_16: [{ id: "R16-1" }, ...], QUARTER_FINALS: [{ id: "QF1", feederHome: "R16-1", feederAway: "R16-2" }, ...] }
+  rounds: Partial<Record<TournamentStage, Array<{ id: string; feederHome?: string; feederAway?: string }>>>;
 }
 
 export type TournamentStage =
@@ -182,7 +189,7 @@ Static array of 12 entries, plus a `getCompetition(code)` lookup. Used by:
 - `competition/[code]/page.tsx` (dispatch + props),
 - the data layer (no — data layer is generic, competition info flows from the page).
 
-Each entry encodes everything competition-specific: the tiebreaker chain id, the qualification bands (leagues), the group count (tournaments), season label, country/region, and the emblem URL (sourced from football-data.org's competition metadata).
+Each entry encodes everything competition-specific: the tiebreaker chain id, the qualification bands (leagues), the group count and bracket template (tournaments), season label, country/region, and the emblem URL (sourced from football-data.org's competition metadata). The bracket template is the fixed feeder pattern for each round (e.g. R16-1 winner faces R16-2 winner in QF1) — see §8.2.
 
 ## 7. Tiebreaker engine (`lib/tiebreakers/`)
 
