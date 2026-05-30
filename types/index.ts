@@ -69,3 +69,70 @@ export type H2HMap = Record<PairKey, H2HEntry>;
 export function pairKey(a: TeamId, b: TeamId): PairKey {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Multi-competition types (added 2026-05-29)
+// ──────────────────────────────────────────────────────────────────────────
+
+export type CompetitionFormat = "league" | "tournament";
+
+export type TiebreakerChainId =
+  | "epl" | "laLiga" | "bundesliga" | "serieA" | "ligue1"
+  | "eredivisie" | "primeira" | "championship" | "brasileirao"
+  | "uefa" | "fifa";
+
+export type TiebreakerRuleId =
+  | "points" | "goalDifference" | "goalsFor" | "goalsAway"
+  | "wins" | "headToHead" | "headToHeadGD" | "headToHeadGoals"
+  | "playoffFlag";
+
+export interface TiebreakerChain {
+  id: TiebreakerChainId;
+  rules: TiebreakerRuleId[];
+}
+
+export type BandColor = "ucl" | "uel" | "uecl" | "relegation" | "promotion" | "playoff";
+
+export interface QualificationBand {
+  positions: number[];
+  label: string;
+  color: BandColor;
+}
+
+export type TournamentStage =
+  | "GROUP_STAGE"
+  | "LAST_16" | "QUARTER_FINALS" | "SEMI_FINALS" | "FINAL"
+  | "PLAYOFFS";
+
+export interface BracketTemplateRound {
+  id: string;             // synthetic, e.g. "QF1"
+  feederHome?: string;    // tie id whose winner fills the home slot
+  feederAway?: string;
+}
+
+export interface BracketTemplate {
+  rounds: Partial<Record<TournamentStage, BracketTemplateRound[]>>;
+}
+
+export interface Competition {
+  code: string;
+  name: string;
+  country: string;
+  emblem: string;
+  format: CompetitionFormat;
+  tiebreaker: TiebreakerChainId;
+  season: { startYear: number; label: string };
+  bands?: QualificationBand[];
+  groupCount?: number;
+  bracketTemplate?: BracketTemplate;
+}
+
+export interface BracketTie {
+  id: string;
+  stage: TournamentStage;
+  homeTeam?: Team;
+  awayTeam?: Team;
+  feederHome?: string;
+  feederAway?: string;
+  fixtures: Fixture[];
+}
