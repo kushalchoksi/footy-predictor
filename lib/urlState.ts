@@ -12,6 +12,13 @@ export function encodeScenario(s: Scenario): string {
     const list = ids.map((id) => `${id}:${encodeOutcome(s.outcomes[id])}`).join(",");
     parts.push("o=" + list);
   }
+  if (s.bracketChoices && Object.keys(s.bracketChoices).length > 0) {
+    const tieIds = Object.keys(s.bracketChoices).sort();
+    const list = tieIds
+      .map((tieId) => `${encodeURIComponent(tieId)}:${s.bracketChoices![tieId]}`)
+      .join(",");
+    parts.push("b=" + list);
+  }
   return parts.join("&");
 }
 
@@ -29,6 +36,20 @@ export function decodeScenario(raw: string): Scenario {
         if (!Number.isFinite(id) || !code) continue;
         const outcome = decodeOutcome(code);
         if (outcome) out.outcomes[id] = outcome;
+      }
+    } else if (segment.startsWith("b=")) {
+      const body = segment.slice(2);
+      if (body.length === 0) continue;
+      const bracketChoices: Record<string, number> = {};
+      for (const pair of body.split(",")) {
+        const [tieIdEncoded, teamIdStr] = pair.split(":");
+        if (!tieIdEncoded || !teamIdStr) continue;
+        const teamId = Number(teamIdStr);
+        if (!Number.isFinite(teamId)) continue;
+        bracketChoices[decodeURIComponent(tieIdEncoded)] = teamId;
+      }
+      if (Object.keys(bracketChoices).length > 0) {
+        out.bracketChoices = bracketChoices;
       }
     }
   }

@@ -78,3 +78,35 @@ describe("urlState", () => {
     expect(s.outcomes[101]).toEqual({ kind: "H", locked: false });
   });
 });
+
+describe("urlState bracketChoices roundtrip", () => {
+  it("encodes and decodes bracketChoices", () => {
+    const original: Scenario = {
+      cluster: [],
+      outcomes: {},
+      bracketChoices: { "QF1": 10, "QF2": 22, "SF1": 10 },
+    };
+    const encoded = encodeScenario(original);
+    expect(encoded).toContain("b=");
+    const decoded = decodeScenario(encoded);
+    expect(decoded.bracketChoices).toEqual(original.bracketChoices);
+  });
+
+  it("decodes a hash without bracketChoices as undefined", () => {
+    const decoded = decodeScenario("");
+    expect(decoded.bracketChoices).toBeUndefined();
+  });
+
+  it("decodes a hash with c, o, and b sections in any order", () => {
+    const original: Scenario = {
+      cluster: [1, 2],
+      outcomes: { 100: { kind: "H", locked: false } },
+      bracketChoices: { "F1": 99 },
+    };
+    const encoded = encodeScenario(original);
+    const decoded = decodeScenario(encoded);
+    expect(decoded.cluster).toEqual([1, 2]);
+    expect(decoded.outcomes[100]?.kind).toBe("H");
+    expect(decoded.bracketChoices).toEqual({ "F1": 99 });
+  });
+});

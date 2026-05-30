@@ -61,6 +61,7 @@ export type OutcomeMap = Record<FixtureId, Outcome>;
 export interface Scenario {
   cluster: TeamId[];
   outcomes: OutcomeMap;
+  bracketChoices?: Record<string, TeamId>;
 }
 
 // Pair key for H2H. Always sorted ascending: `${min}|${max}`.
