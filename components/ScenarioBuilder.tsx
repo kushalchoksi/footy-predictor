@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Fixture, Outcome, OutcomeMap, Scenario, Standing, TeamId } from "@/types";
+import type { Competition, Fixture, Outcome, OutcomeMap, Scenario, Standing, TeamId } from "@/types";
 import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import { simulate } from "@/lib/simulate";
 import TopBar from "@/components/TopBar";
@@ -12,12 +12,13 @@ import ShareBar from "@/components/ShareBar";
 import SavedScenarios, { loadSaved, persistSaved } from "@/components/SavedScenarios";
 
 interface Props {
+  competition: Competition;
   standings: Standing[];
   fixtures: Fixture[];
   fetchedAt: string;
 }
 
-export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Props) {
+export default function ScenarioBuilder({ competition, standings, fixtures, fetchedAt }: Props) {
   const [scenario, setScenario] = useState<Scenario>({ cluster: [], outcomes: {} });
   const [savedRefresh, setSavedRefresh] = useState(0);
 
@@ -139,6 +140,7 @@ export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Prop
             <section className="space-y-2">
               <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Selected — projected</h2>
               <ProjectedTable
+                competition={competition}
                 base={standings}
                 fixtures={fixtures}
                 outcomes={scenario.outcomes}
@@ -164,6 +166,7 @@ export default function ScenarioBuilder({ standings, fixtures, fetchedAt }: Prop
             <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Projected table</h2>
             <p className="text-xs text-zinc-500">Hover a row to see who it competes with, then click to start comparing.</p>
             <ProjectedTable
+              competition={competition}
               base={standings}
               fixtures={fixtures}
               outcomes={scenario.outcomes}

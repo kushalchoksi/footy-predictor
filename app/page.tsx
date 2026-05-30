@@ -1,5 +1,6 @@
 import ScenarioBuilder from "@/components/ScenarioBuilder";
 import { getFixtures, getStandings } from "@/lib/footballData";
+import { getCompetition } from "@/lib/competitions";
 
 export const revalidate = 120;
 
@@ -24,8 +25,11 @@ export default async function Page() {
     );
   }
 
+  const competition = getCompetition("PL")!;
+
   return (
     <ScenarioBuilder
+      competition={competition}
       standings={standings}
       fixtures={fixtures}
       fetchedAt={new Date().toISOString()}
