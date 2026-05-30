@@ -4,7 +4,6 @@ import { z } from "zod";
 import type { Fixture, Standing, Team } from "@/types";
 
 const BASE = "https://api.football-data.org/v4";
-const COMP = "PL";
 const REVALIDATE_SECONDS = 120;
 
 const teamSchema = z.object({
@@ -82,46 +81,50 @@ async function fetchFromApi(path: string): Promise<unknown> {
   return res.json();
 }
 
-export const getStandings = unstable_cache(
-  async (): Promise<Standing[]> => {
-    const raw = await fetchFromApi(`/competitions/${COMP}/standings`);
-    const parsed = standingsResponseSchema.parse(raw);
-    const total = parsed.standings.find((s) => s.type === "TOTAL");
-    if (!total) throw new Error("No TOTAL standings stage in response");
-    return total.table.map((row) => ({
-      team: normalizeTeam(row.team),
-      position: row.position,
-      playedGames: row.playedGames,
-      won: row.won,
-      draw: row.draw,
-      lost: row.lost,
-      points: row.points,
-      goalsFor: row.goalsFor,
-      goalsAgainst: row.goalsAgainst,
-      goalDifference: row.goalDifference,
-    }));
-  },
-  ["epl-standings"],
-  { revalidate: REVALIDATE_SECONDS },
-);
-
-export const getFixtures = unstable_cache(
-  async (): Promise<Fixture[]> => {
-    const raw = await fetchFromApi(`/competitions/${COMP}/matches`);
-    const parsed = matchesResponseSchema.parse(raw);
-    return parsed.matches
-      .filter((m) => m.status === "SCHEDULED" || m.status === "TIMED" || m.status === "FINISHED")
-      .map((m) => ({
-        id: m.id,
-        matchday: m.matchday ?? 0,
-        homeTeam: normalizeTeam(m.homeTeam),
-        awayTeam: normalizeTeam(m.awayTeam),
-        status: m.status === "FINISHED" ? "FINISHED" as const : "SCHEDULED" as const,
-        homeGoals: m.score.fullTime.home,
-        awayGoals: m.score.fullTime.away,
-        utcDate: m.utcDate,
+export function getStandings(code: string): Promise<Standing[]> {
+  return unstable_cache(
+    async (): Promise<Standing[]> => {
+      const raw = await fetchFromApi(`/competitions/${code}/standings`);
+      const parsed = standingsResponseSchema.parse(raw);
+      const total = parsed.standings.find((s) => s.type === "TOTAL");
+      if (!total) throw new Error("No TOTAL standings stage in response");
+      return total.table.map((row) => ({
+        team: normalizeTeam(row.team),
+        position: row.position,
+        playedGames: row.playedGames,
+        won: row.won,
+        draw: row.draw,
+        lost: row.lost,
+        points: row.points,
+        goalsFor: row.goalsFor,
+        goalsAgainst: row.goalsAgainst,
+        goalDifference: row.goalDifference,
       }));
-  },
-  ["epl-fixtures"],
-  { revalidate: REVALIDATE_SECONDS },
-);
+    },
+    [`${code}-standings`],
+    { revalidate: REVALIDATE_SECONDS },
+  )();
+}
+
+export function getFixtures(code: string): Promise<Fixture[]> {
+  return unstable_cache(
+    async (): Promise<Fixture[]> => {
+      const raw = await fetchFromApi(`/competitions/${code}/matches`);
+      const parsed = matchesResponseSchema.parse(raw);
+      return parsed.matches
+        .filter((m) => m.status === "SCHEDULED" || m.status === "TIMED" || m.status === "FINISHED")
+        .map((m) => ({
+          id: m.id,
+          matchday: m.matchday ?? 0,
+          homeTeam: normalizeTeam(m.homeTeam),
+          awayTeam: normalizeTeam(m.awayTeam),
+          status: m.status === "FINISHED" ? "FINISHED" as const : "SCHEDULED" as const,
+          homeGoals: m.score.fullTime.home,
+          awayGoals: m.score.fullTime.away,
+          utcDate: m.utcDate,
+        }));
+    },
+    [`${code}-fixtures`],
+    { revalidate: REVALIDATE_SECONDS },
+  )();
+}

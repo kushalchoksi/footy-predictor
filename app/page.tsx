@@ -6,7 +6,7 @@ export const revalidate = 120;
 export default async function Page() {
   let standings, fixtures;
   try {
-    [standings, fixtures] = await Promise.all([getStandings(), getFixtures()]);
+    [standings, fixtures] = await Promise.all([getStandings("PL"), getFixtures("PL")]);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return (
