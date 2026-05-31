@@ -6,6 +6,7 @@ import { projectStandings } from "@/lib/scenario";
 import { sortByChain, CHAINS } from "@/lib/tiebreakers";
 import { computeRanges } from "@/lib/ranges";
 import { detectDecided, type DecidedFlags } from "@/lib/decided";
+import { qualificationCuts } from "@/lib/competitions";
 import { computePositionInfo } from "@/lib/positionBounds";
 import { useMemo, useState } from "react";
 
@@ -49,7 +50,11 @@ export default function ProjectedTable({ competition, base, fixtures, outcomes, 
     return computeRanges(map, fixtures.filter((f) => f.status === "SCHEDULED"), outcomes);
   }, [projected.standings, fixtures, outcomes]);
 
-  const decided = useMemo(() => detectDecided(ranges, { relegationCut: 17, top4Cut: 4 }), [ranges]);
+  const { relegationCut, topNCut } = useMemo(() => qualificationCuts(competition), [competition]);
+  const decided = useMemo(
+    () => detectDecided(ranges, { relegationCut, top4Cut: topNCut }),
+    [ranges, relegationCut, topNCut],
+  );
 
   const positionInfo = useMemo(() => {
     if (!onClusterChange || cluster.length > 0) return null;
@@ -144,7 +149,7 @@ export default function ProjectedTable({ competition, base, fixtures, outcomes, 
                   <div className="flex items-center gap-2">
                     <TeamCrest team={row.team} size={18} />
                     <span className="truncate">{row.team.shortName}</span>
-                    <DecidedBadges flags={flags} />
+                    <DecidedBadges flags={flags} topNCut={topNCut} />
                   </div>
                 </td>
                 <td className="px-2 py-2 text-right">{row.playedGames}</td>
@@ -173,13 +178,15 @@ export default function ProjectedTable({ competition, base, fixtures, outcomes, 
   );
 }
 
-function DecidedBadges({ flags }: { flags: DecidedFlags | undefined }) {
+function DecidedBadges({ flags, topNCut }: { flags: DecidedFlags | undefined; topNCut: number }) {
   if (!flags) return null;
   const badges: string[] = [];
   if (flags.alreadyChampions) badges.push("Champions");
   if (flags.relegated) badges.push("Relegated");
   if (flags.mathematicallySafe && !flags.alreadyChampions) badges.push("Safe");
-  if (flags.cannotFinishTop4 && !flags.alreadyChampions && !flags.relegated) badges.push("No top 4");
+  if (flags.cannotFinishTop4 && topNCut > 0 && !flags.alreadyChampions && !flags.relegated) {
+    badges.push(`No top ${topNCut}`);
+  }
   if (badges.length === 0) return null;
   return (
     <span className="ml-1 flex gap-1">

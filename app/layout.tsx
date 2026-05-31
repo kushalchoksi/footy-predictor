@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Footy Scenarios — EPL",
-  description: "Model the remaining Premier League fixtures and see the projected final table.",
+  title: "Footy Scenarios",
+  description: "Model remaining fixtures across leagues and tournaments and see the projected final table.",
 };
 
 // Runs before first paint to set the theme class, avoiding a flash of the

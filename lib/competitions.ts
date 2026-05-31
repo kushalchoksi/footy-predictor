@@ -82,7 +82,7 @@ export const COMPETITIONS: Competition[] = [
     code: "DED",
     name: "Eredivisie",
     country: "Netherlands",
-    emblem: "https://crests.football-data.org/DED.png",
+    emblem: "/competitions/DED.png",
     format: "league",
     tiebreaker: "eredivisie",
     season: { startYear: 2025, label: "2025/26" },
@@ -127,7 +127,7 @@ export const COMPETITIONS: Competition[] = [
     code: "BSA",
     name: "Brasileirão",
     country: "Brazil",
-    emblem: "https://crests.football-data.org/BSA.png",
+    emblem: "/competitions/BSA.svg",
     format: "league",
     tiebreaker: "brasileirao",
     season: { startYear: 2025, label: "2025" },
@@ -176,7 +176,7 @@ export const COMPETITIONS: Competition[] = [
     code: "EC",
     name: "European Championship",
     country: "International",
-    emblem: "https://crests.football-data.org/EC.png",
+    emblem: "/competitions/EC.svg",
     format: "tournament",
     tiebreaker: "uefa",
     season: { startYear: 2024, label: "Euro 2024" },
@@ -207,7 +207,7 @@ export const COMPETITIONS: Competition[] = [
     code: "WC",
     name: "FIFA World Cup",
     country: "International",
-    emblem: "https://crests.football-data.org/WC.png",
+    emblem: "/competitions/WC.svg",
     format: "tournament",
     tiebreaker: "fifa",
     season: { startYear: 2026, label: "World Cup 2026" },
@@ -250,4 +250,23 @@ export const COMPETITIONS: Competition[] = [
 
 export function getCompetition(code: string): Competition | undefined {
   return COMPETITIONS.find((c) => c.code === code);
+}
+
+/**
+ * Derive the relegation and top-qualification cuts from a competition's bands so
+ * the decided-status chips use each league's real thresholds instead of a fixed
+ * 17/4 (wrong for 18-team and 24-team leagues).
+ *
+ * - relegationCut: the last safe position = one above the direct relegation band.
+ *   Infinity when a competition has no relegation band (no team can be "relegated").
+ * - topNCut: the deepest position of the top qualifying band (UCL / Libertadores,
+ *   or promotion in second tiers). 0 when there is no such band.
+ */
+export function qualificationCuts(competition: Competition): { relegationCut: number; topNCut: number } {
+  const bands = competition.bands ?? [];
+  const relBand = bands.find((b) => b.color === "relegation");
+  const relegationCut = relBand ? Math.min(...relBand.positions) - 1 : Number.POSITIVE_INFINITY;
+  const topBand = bands.find((b) => b.color === "ucl") ?? bands.find((b) => b.color === "promotion");
+  const topNCut = topBand ? Math.max(...topBand.positions) : 0;
+  return { relegationCut, topNCut };
 }

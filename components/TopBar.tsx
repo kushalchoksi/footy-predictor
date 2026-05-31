@@ -1,17 +1,27 @@
 "use client";
 
+import Link from "next/link";
+
 interface Props {
   fetchedAt: string;
   fixturesLeft: number;
+  competitionName: string;
   onResetPicks: () => void;
   onSimulateAll: () => void;
 }
 
-export default function TopBar({ fetchedAt, fixturesLeft, onResetPicks, onSimulateAll }: Props) {
+export default function TopBar({ fetchedAt, fixturesLeft, competitionName, onResetPicks, onSimulateAll }: Props) {
   return (
     <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-border bg-surface/80 px-4 py-3 backdrop-blur">
       <div className="flex items-baseline gap-3">
-        <h1 className="text-lg font-semibold tracking-tight">Footy Scenarios — EPL</h1>
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-tight text-fg transition hover:text-emerald-600 dark:hover:text-emerald-400"
+        >
+          Footy Scenarios
+        </Link>
+        <span className="text-faint">/</span>
+        <h1 className="text-lg font-semibold tracking-tight text-muted">{competitionName}</h1>
         <span className="font-mono text-[11px] text-faint">
           updated {new Date(fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>

@@ -10,6 +10,8 @@ import SimulationBoard from "@/components/SimulationBoard";
 import ProjectedTable from "@/components/ProjectedTable";
 import ShareBar from "@/components/ShareBar";
 import SavedScenarios, { loadSaved, persistSaved } from "@/components/SavedScenarios";
+import SeasonCompleteBanner from "@/components/SeasonCompleteBanner";
+import { isSeasonComplete } from "@/lib/seasonStatus";
 
 interface Props {
   competition: Competition;
@@ -108,15 +110,18 @@ export default function ScenarioBuilder({ competition, standings, fixtures, fetc
   const fixturesLeft = totalScheduled - Object.keys(scenario.outcomes).length;
 
   const hasCluster = scenario.cluster.length > 0;
+  const seasonComplete = useMemo(() => isSeasonComplete(fixtures), [fixtures]);
 
   return (
     <div className="min-h-screen">
       <TopBar
         fetchedAt={fetchedAt}
         fixturesLeft={Math.max(0, fixturesLeft)}
+        competitionName={competition.name}
         onResetPicks={handleResetPicks}
         onSimulateAll={handleSimulateAll}
       />
+      {seasonComplete && <SeasonCompleteBanner seasonLabel={competition.season.label} />}
       {hasCluster ? (
         <div className="flex">
           <Sidebar

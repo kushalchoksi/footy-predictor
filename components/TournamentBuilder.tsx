@@ -7,6 +7,8 @@ import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import TopBar from "@/components/TopBar";
 import GroupCard from "@/components/GroupCard";
 import Bracket from "@/components/Bracket";
+import SeasonCompleteBanner from "@/components/SeasonCompleteBanner";
+import { isSeasonComplete } from "@/lib/seasonStatus";
 
 interface Props {
   competition: Competition;
@@ -80,15 +82,18 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
   }
 
   const groupNames = [...projection.groupStandings.keys()].sort();
+  const seasonComplete = useMemo(() => isSeasonComplete(fixtures), [fixtures]);
 
   return (
     <div className="min-h-screen">
       <TopBar
         fetchedAt={fetchedAt}
         fixturesLeft={Math.max(0, fixturesLeft)}
+        competitionName={competition.name}
         onResetPicks={() => updateScenario({ ...scenario, outcomes: {} })}
         onSimulateAll={() => { /* Simulate-all for tournaments lands later. */ }}
       />
+      {seasonComplete && <SeasonCompleteBanner seasonLabel={competition.season.label} />}
       <main className="mx-auto max-w-6xl space-y-6 p-4">
         <header className="space-y-1">
           <h1 className="text-xl font-bold text-fg">{competition.name}</h1>
