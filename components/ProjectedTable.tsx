@@ -1,15 +1,16 @@
 "use client";
 
-import type { Fixture, OutcomeMap, Standing, TeamId } from "@/types";
+import type { Competition, Fixture, OutcomeMap, Standing, TeamId } from "@/types";
 import TeamCrest from "@/components/TeamCrest";
 import { projectStandings } from "@/lib/scenario";
-import { sortByEPL } from "@/lib/tiebreakers";
+import { sortByChain, CHAINS } from "@/lib/tiebreakers";
 import { computeRanges } from "@/lib/ranges";
 import { detectDecided, type DecidedFlags } from "@/lib/decided";
 import { computePositionInfo } from "@/lib/positionBounds";
 import { useMemo, useState } from "react";
 
 interface Props {
+  competition: Competition;
   base: Standing[];
   fixtures: Fixture[];
   outcomes: OutcomeMap;
@@ -31,13 +32,16 @@ function bandFor(pos: number): string {
   return BAND_CLASSES.find((b) => b.test(pos))!.cls;
 }
 
-export default function ProjectedTable({ base, fixtures, outcomes, cluster, onClusterChange, filterTeamIds }: Props) {
+export default function ProjectedTable({ competition, base, fixtures, outcomes, cluster, onClusterChange, filterTeamIds }: Props) {
   const clusterSet = useMemo(() => new Set(cluster), [cluster]);
   const filterSet = useMemo(() => filterTeamIds ? new Set(filterTeamIds) : null, [filterTeamIds]);
   const [hoverTeamId, setHoverTeamId] = useState<TeamId | null>(null);
 
   const projected = useMemo(() => projectStandings(base, fixtures, outcomes), [base, fixtures, outcomes]);
-  const sorted = useMemo(() => sortByEPL(projected.standings, projected.h2h), [projected]);
+  const sorted = useMemo(
+    () => sortByChain(projected.standings, projected.h2h, CHAINS[competition.tiebreaker]),
+    [projected, competition],
+  );
 
   const ranges = useMemo(() => {
     const map = new Map<TeamId, number>();
@@ -84,9 +88,9 @@ export default function ProjectedTable({ base, fixtures, outcomes, cluster, onCl
   }
 
   return (
-    <div className="relative overflow-x-auto rounded border border-zinc-800">
+    <div className="relative overflow-x-auto rounded border border-border">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-900 text-xs uppercase tracking-wider text-zinc-400">
+        <thead className="bg-surface-2 text-xs uppercase tracking-wider text-muted">
           <tr>
             <th className="px-2 py-2 text-left">#</th>
             <th className="px-2 py-2 text-left">Team</th>
@@ -116,17 +120,17 @@ export default function ProjectedTable({ base, fixtures, outcomes, cluster, onCl
             let leftBorderCls = bandFor(pos);
 
             if (inHoverBand) {
-              rowBg = " bg-emerald-950/30";
+              rowBg = " bg-emerald-100 dark:bg-emerald-950/30";
               leftBorderCls = "border-l-emerald-400";
             } else if (inCluster) {
-              rowBg = " bg-zinc-900/60";
+              rowBg = " bg-surface-2/60";
             }
 
             return (
               <tr
                 key={row.team.id}
                 className={
-                  "border-t border-l-4 border-zinc-900 " +
+                  "border-t border-l-4 border-border " +
                   leftBorderCls +
                   rowBg +
                   (isHovered && interactive ? " cursor-pointer" : "")
@@ -135,7 +139,7 @@ export default function ProjectedTable({ base, fixtures, outcomes, cluster, onCl
                 onMouseLeave={handleRowLeave}
                 onClick={() => handleRowClick(row.team.id)}
               >
-                <td className="px-2 py-2 text-zinc-400">{pos}</td>
+                <td className="px-2 py-2 text-muted">{pos}</td>
                 <td className="px-2 py-2">
                   <div className="flex items-center gap-2">
                     <TeamCrest team={row.team} size={18} />
@@ -151,7 +155,7 @@ export default function ProjectedTable({ base, fixtures, outcomes, cluster, onCl
                 <td className="px-2 py-2 text-right">{row.goalsAgainst}</td>
                 <td className="px-2 py-2 text-right">{row.goalDifference}</td>
                 <td className="px-2 py-2 text-right font-semibold">{row.points}</td>
-                <td className="px-2 py-2 text-right text-xs text-zinc-500">
+                <td className="px-2 py-2 text-right text-xs text-faint">
                   {range && range.min !== range.max ? `${range.min}–${range.max}` : "—"}
                 </td>
               </tr>
@@ -161,7 +165,7 @@ export default function ProjectedTable({ base, fixtures, outcomes, cluster, onCl
       </table>
 
       {sorted.playoffsFlagged.size > 0 && (
-        <div className="border-t border-amber-700/40 bg-amber-950/20 p-2 text-xs text-amber-200">
+        <div className="border-t border-amber-300 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-700/40 dark:bg-amber-950/20 dark:text-amber-200">
           Playoff required to break a tie: {[...sorted.playoffsFlagged].join(", ")}
         </div>
       )}
@@ -180,7 +184,7 @@ function DecidedBadges({ flags }: { flags: DecidedFlags | undefined }) {
   return (
     <span className="ml-1 flex gap-1">
       {badges.map((b) => (
-        <span key={b} className="rounded-full bg-zinc-700 px-2 text-[10px] uppercase tracking-wider text-zinc-200">
+        <span key={b} className="rounded-full bg-surface-3 px-2 text-[10px] uppercase tracking-wider text-fg">
           {b}
         </span>
       ))}

@@ -1,0 +1,253 @@
+import type { Competition } from "@/types";
+
+export const COMPETITIONS: Competition[] = [
+  {
+    code: "PL",
+    name: "Premier League",
+    country: "England",
+    emblem: "https://crests.football-data.org/PL.png",
+    format: "league",
+    tiebreaker: "epl",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2, 3, 4], label: "Champions League", color: "ucl" },
+      { positions: [5, 6],        label: "Europa League",    color: "uel" },
+      { positions: [7],           label: "Conference League",color: "uecl" },
+      { positions: [18, 19, 20],  label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "PD",
+    name: "La Liga",
+    country: "Spain",
+    emblem: "https://crests.football-data.org/PD.png",
+    format: "league",
+    tiebreaker: "laLiga",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2, 3, 4], label: "Champions League", color: "ucl" },
+      { positions: [5, 6],        label: "Europa League",    color: "uel" },
+      { positions: [7],           label: "Conference League",color: "uecl" },
+      { positions: [18, 19, 20],  label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "BL1",
+    name: "Bundesliga",
+    country: "Germany",
+    emblem: "https://crests.football-data.org/BL1.png",
+    format: "league",
+    tiebreaker: "bundesliga",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2, 3, 4], label: "Champions League", color: "ucl" },
+      { positions: [5, 6],        label: "Europa League",    color: "uel" },
+      { positions: [7],           label: "Conference League",color: "uecl" },
+      { positions: [16],          label: "Relegation playoff", color: "playoff" },
+      { positions: [17, 18],      label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "SA",
+    name: "Serie A",
+    country: "Italy",
+    emblem: "https://crests.football-data.org/SA.png",
+    format: "league",
+    tiebreaker: "serieA",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2, 3, 4], label: "Champions League", color: "ucl" },
+      { positions: [5, 6],        label: "Europa League",    color: "uel" },
+      { positions: [7],           label: "Conference League",color: "uecl" },
+      { positions: [18, 19, 20],  label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "FL1",
+    name: "Ligue 1",
+    country: "France",
+    emblem: "https://crests.football-data.org/FL1.png",
+    format: "league",
+    tiebreaker: "ligue1",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2, 3],    label: "Champions League", color: "ucl" },
+      { positions: [4, 5],        label: "Europa League",    color: "uel" },
+      { positions: [6],           label: "Conference League",color: "uecl" },
+      { positions: [16],          label: "Relegation playoff", color: "playoff" },
+      { positions: [17, 18],      label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "DED",
+    name: "Eredivisie",
+    country: "Netherlands",
+    emblem: "https://crests.football-data.org/DED.png",
+    format: "league",
+    tiebreaker: "eredivisie",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2],    label: "Champions League", color: "ucl" },
+      { positions: [3, 4],    label: "Europa League",    color: "uel" },
+      { positions: [5, 6, 7], label: "Conference League",color: "uecl" },
+      { positions: [17],      label: "Relegation playoff", color: "playoff" },
+      { positions: [18],      label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "PPL",
+    name: "Primeira Liga",
+    country: "Portugal",
+    emblem: "https://crests.football-data.org/PPL.png",
+    format: "league",
+    tiebreaker: "primeira",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2],    label: "Champions League", color: "ucl" },
+      { positions: [3, 4],    label: "Europa League",    color: "uel" },
+      { positions: [5],       label: "Conference League",color: "uecl" },
+      { positions: [17, 18],  label: "Relegation",       color: "relegation" },
+    ],
+  },
+  {
+    code: "ELC",
+    name: "Championship",
+    country: "England",
+    emblem: "https://crests.football-data.org/ELC.png",
+    format: "league",
+    tiebreaker: "championship",
+    season: { startYear: 2025, label: "2025/26" },
+    bands: [
+      { positions: [1, 2],          label: "Promotion to Premier League", color: "promotion" },
+      { positions: [3, 4, 5, 6],    label: "Playoff for promotion",       color: "playoff" },
+      { positions: [22, 23, 24],    label: "Relegation",                  color: "relegation" },
+    ],
+  },
+  {
+    code: "BSA",
+    name: "Brasileirão",
+    country: "Brazil",
+    emblem: "https://crests.football-data.org/BSA.png",
+    format: "league",
+    tiebreaker: "brasileirao",
+    season: { startYear: 2025, label: "2025" },
+    bands: [
+      { positions: [1, 2, 3, 4, 5, 6], label: "Copa Libertadores",  color: "ucl" },
+      { positions: [7, 8, 9, 10, 11, 12], label: "Copa Sudamericana", color: "uel" },
+      { positions: [17, 18, 19, 20],   label: "Relegation",         color: "relegation" },
+    ],
+  },
+  {
+    code: "CL",
+    name: "UEFA Champions League",
+    country: "Europe",
+    emblem: "https://crests.football-data.org/CL.png",
+    format: "tournament",
+    tiebreaker: "uefa",
+    season: { startYear: 2025, label: "2025/26" },
+    groupCount: 8,
+    bracketTemplate: {
+      rounds: {
+        PLAYOFFS: [
+          { id: "PO1" }, { id: "PO2" }, { id: "PO3" }, { id: "PO4" },
+          { id: "PO5" }, { id: "PO6" }, { id: "PO7" }, { id: "PO8" },
+        ],
+        LAST_16: [
+          { id: "R16-1" }, { id: "R16-2" }, { id: "R16-3" }, { id: "R16-4" },
+          { id: "R16-5" }, { id: "R16-6" }, { id: "R16-7" }, { id: "R16-8" },
+        ],
+        QUARTER_FINALS: [
+          { id: "QF1", feederHome: "R16-1", feederAway: "R16-2" },
+          { id: "QF2", feederHome: "R16-3", feederAway: "R16-4" },
+          { id: "QF3", feederHome: "R16-5", feederAway: "R16-6" },
+          { id: "QF4", feederHome: "R16-7", feederAway: "R16-8" },
+        ],
+        SEMI_FINALS: [
+          { id: "SF1", feederHome: "QF1", feederAway: "QF2" },
+          { id: "SF2", feederHome: "QF3", feederAway: "QF4" },
+        ],
+        FINAL: [
+          { id: "F1", feederHome: "SF1", feederAway: "SF2" },
+        ],
+      },
+    },
+  },
+  {
+    code: "EC",
+    name: "European Championship",
+    country: "International",
+    emblem: "https://crests.football-data.org/EC.png",
+    format: "tournament",
+    tiebreaker: "uefa",
+    season: { startYear: 2024, label: "Euro 2024" },
+    groupCount: 6,
+    bracketTemplate: {
+      rounds: {
+        LAST_16: [
+          { id: "R16-1" }, { id: "R16-2" }, { id: "R16-3" }, { id: "R16-4" },
+          { id: "R16-5" }, { id: "R16-6" }, { id: "R16-7" }, { id: "R16-8" },
+        ],
+        QUARTER_FINALS: [
+          { id: "QF1", feederHome: "R16-1", feederAway: "R16-2" },
+          { id: "QF2", feederHome: "R16-3", feederAway: "R16-4" },
+          { id: "QF3", feederHome: "R16-5", feederAway: "R16-6" },
+          { id: "QF4", feederHome: "R16-7", feederAway: "R16-8" },
+        ],
+        SEMI_FINALS: [
+          { id: "SF1", feederHome: "QF1", feederAway: "QF2" },
+          { id: "SF2", feederHome: "QF3", feederAway: "QF4" },
+        ],
+        FINAL: [
+          { id: "F1", feederHome: "SF1", feederAway: "SF2" },
+        ],
+      },
+    },
+  },
+  {
+    code: "WC",
+    name: "FIFA World Cup",
+    country: "International",
+    emblem: "https://crests.football-data.org/WC.png",
+    format: "tournament",
+    tiebreaker: "fifa",
+    season: { startYear: 2026, label: "World Cup 2026" },
+    groupCount: 12,
+    bracketTemplate: {
+      rounds: {
+        LAST_32: [
+          { id: "R32-1" }, { id: "R32-2" }, { id: "R32-3" }, { id: "R32-4" },
+          { id: "R32-5" }, { id: "R32-6" }, { id: "R32-7" }, { id: "R32-8" },
+          { id: "R32-9" }, { id: "R32-10" }, { id: "R32-11" }, { id: "R32-12" },
+          { id: "R32-13" }, { id: "R32-14" }, { id: "R32-15" }, { id: "R32-16" },
+        ],
+        LAST_16: [
+          { id: "R16-1", feederHome: "R32-1", feederAway: "R32-2" },
+          { id: "R16-2", feederHome: "R32-3", feederAway: "R32-4" },
+          { id: "R16-3", feederHome: "R32-5", feederAway: "R32-6" },
+          { id: "R16-4", feederHome: "R32-7", feederAway: "R32-8" },
+          { id: "R16-5", feederHome: "R32-9", feederAway: "R32-10" },
+          { id: "R16-6", feederHome: "R32-11", feederAway: "R32-12" },
+          { id: "R16-7", feederHome: "R32-13", feederAway: "R32-14" },
+          { id: "R16-8", feederHome: "R32-15", feederAway: "R32-16" },
+        ],
+        QUARTER_FINALS: [
+          { id: "QF1", feederHome: "R16-1", feederAway: "R16-2" },
+          { id: "QF2", feederHome: "R16-3", feederAway: "R16-4" },
+          { id: "QF3", feederHome: "R16-5", feederAway: "R16-6" },
+          { id: "QF4", feederHome: "R16-7", feederAway: "R16-8" },
+        ],
+        SEMI_FINALS: [
+          { id: "SF1", feederHome: "QF1", feederAway: "QF2" },
+          { id: "SF2", feederHome: "QF3", feederAway: "QF4" },
+        ],
+        FINAL: [
+          { id: "F1", feederHome: "SF1", feederAway: "SF2" },
+        ],
+      },
+    },
+  },
+];
+
+export function getCompetition(code: string): Competition | undefined {
+  return COMPETITIONS.find((c) => c.code === code);
+}

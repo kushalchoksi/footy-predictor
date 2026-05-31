@@ -23,7 +23,7 @@ export default function SimulationBoard(props: Props) {
 
   if (selectedStandings.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/30 p-8 text-center text-sm text-zinc-500">
+      <div className="rounded-lg border border-dashed border-border bg-surface/30 p-8 text-center text-sm text-muted">
         Pick a cluster preset or select teams from the sidebar to start comparing scenarios.
       </div>
     );

@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock, Unlock, X } from "lucide-react";
 import type { Fixture, Outcome, Team } from "@/types";
 import TeamCrest from "@/components/TeamCrest";
 import FlipClockDigit from "@/components/FlipClockDigit";
@@ -41,21 +42,21 @@ export default function FixtureCard({
   return (
     <div className={
       "rounded-lg border p-2.5 text-sm " +
-      (mirrored ? "border-amber-700/50 bg-amber-950/10" : "border-zinc-800 bg-zinc-950/30") +
+      (mirrored ? "border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-950/10" : "border-border bg-surface/30") +
       (locked ? " ring-1 ring-emerald-600/40" : "")
     }>
-      <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+      <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-faint">
         <span>MW {fixture.matchday} · {venue}</span>
         <div className="flex items-center gap-1">
-          {mirrored && <span className="text-amber-400">H2H</span>}
+          {mirrored && <span className="text-amber-600 dark:text-amber-400">H2H</span>}
           <button
             type="button"
             onClick={onToggleLock}
-            className={"rounded px-1 text-[10px] " + (locked ? "bg-emerald-700 text-white" : "bg-zinc-800 text-zinc-400 hover:text-zinc-200")}
+            className={"flex items-center justify-center rounded p-0.5 " + (locked ? "bg-emerald-700 text-white" : "bg-surface-2 text-muted hover:text-fg")}
             title={locked ? "Unlock" : "Lock"}
             aria-label={locked ? "Unlock" : "Lock"}
           >
-            {locked ? "🔒" : "🔓"}
+            {locked ? <Lock size={12} aria-hidden="true" /> : <Unlock size={12} aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -65,10 +66,10 @@ export default function FixtureCard({
         <span className="flex-1 truncate text-sm">{opponent.shortName}</span>
         <span className={
           "rounded-md px-1.5 py-0.5 font-mono text-[10px] " +
-          (pts === 3 ? "bg-emerald-700/60 text-emerald-100" :
-           pts === 1 ? "bg-zinc-700 text-zinc-100" :
-           pts === 0 ? "bg-rose-800/60 text-rose-100" :
-           "bg-zinc-900 text-zinc-500")
+          (pts === 3 ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-700/60 dark:text-emerald-100" :
+           pts === 1 ? "bg-surface-3 text-fg" :
+           pts === 0 ? "bg-rose-200 text-rose-900 dark:bg-rose-800/60 dark:text-rose-100" :
+           "bg-surface-2 text-faint")
         }>
           {pts === null ? "—" : `+${pts}`}
         </span>
@@ -76,7 +77,7 @@ export default function FixtureCard({
 
       <div className="mt-2 flex items-center justify-center gap-3">
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+          <span className="text-[9px] uppercase tracking-wider text-faint">
             {perspectiveIsHome ? "You" : opponent.shortName.slice(0, 3)}
           </span>
           <FlipClockDigit
@@ -86,9 +87,9 @@ export default function FixtureCard({
             label="Home goals"
           />
         </div>
-        <span className="font-mono text-xs text-zinc-500">–</span>
+        <span className="font-mono text-xs text-faint">–</span>
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+          <span className="text-[9px] uppercase tracking-wider text-faint">
             {perspectiveIsHome ? opponent.shortName.slice(0, 3) : "You"}
           </span>
           <FlipClockDigit
@@ -102,14 +103,14 @@ export default function FixtureCard({
           <button
             type="button"
             onClick={onClear}
-            className="ml-1 rounded text-[10px] text-zinc-500 hover:text-rose-400"
+            className="ml-1 flex items-center justify-center rounded p-0.5 text-faint hover:text-rose-500 dark:hover:text-rose-400"
             title="Clear pick"
+            aria-label="Clear pick"
           >
-            ✕
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>
     </div>
   );
 }
-

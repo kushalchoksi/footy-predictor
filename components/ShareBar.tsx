@@ -28,7 +28,7 @@ export default function ShareBar({ scenario, onSave }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded border border-zinc-800 p-3">
+    <div className="flex flex-wrap items-center gap-2 rounded border border-border p-3">
       <button
         type="button"
         onClick={copyLink}
@@ -42,12 +42,12 @@ export default function ShareBar({ scenario, onSave }: Props) {
           value={saveName}
           onChange={(e) => setSaveName(e.target.value)}
           placeholder="Name this scenario"
-          className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 placeholder-zinc-500"
+          className="rounded border border-border bg-surface-2 px-2 py-1 text-sm text-fg placeholder-faint"
         />
         <button
           type="button"
           onClick={handleSave}
-          className="rounded bg-zinc-700 px-3 py-1 text-sm text-zinc-100 hover:bg-zinc-600"
+          className="rounded bg-surface-3 px-3 py-1 text-sm text-fg hover:bg-surface-2"
         >
           Save
         </button>

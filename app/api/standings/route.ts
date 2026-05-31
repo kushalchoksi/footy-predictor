@@ -3,7 +3,7 @@ import { getStandings } from "@/lib/footballData";
 
 export async function GET() {
   try {
-    const standings = await getStandings();
+    const standings = await getStandings("PL");
     return NextResponse.json({ standings });
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error";

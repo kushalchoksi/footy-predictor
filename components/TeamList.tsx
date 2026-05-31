@@ -29,15 +29,15 @@ export default function TeamList({ standings, cluster, onToggle }: Props) {
               className={
                 "group flex w-full items-center gap-2 rounded-md border-l-2 px-2 py-1.5 text-left transition-colors " +
                 (active
-                  ? "bg-zinc-900 text-zinc-100"
-                  : "border-transparent text-zinc-300 hover:bg-zinc-900/50 ") +
+                  ? "bg-surface-2 text-fg"
+                  : "border-transparent text-muted hover:bg-surface-2/50 ") +
                 (dim ? " opacity-40 hover:opacity-100" : "")
               }
               style={{ borderLeftColor: active ? palette.primary : "transparent" }}
             >
               <TeamCrest team={s.team} size={20} />
               <span className="flex-1 truncate text-sm">{s.team.shortName}</span>
-              <span className="font-mono text-xs text-zinc-500">{s.points}</span>
+              <span className="font-mono text-xs text-faint">{s.points}</span>
             </button>
           </li>
         );
