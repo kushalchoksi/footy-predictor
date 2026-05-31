@@ -70,6 +70,11 @@ export default function FlipClockDigit({
       type="button"
       {...bind()}
       onClick={() => bump(1)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        if (disabled) return;
+        bump(-1);
+      }}
       onWheel={(e) => {
         if (disabled) return;
         if (e.deltaY < 0) bump(1);

@@ -7,6 +7,8 @@ import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import TopBar from "@/components/TopBar";
 import GroupCard from "@/components/GroupCard";
 import Bracket from "@/components/Bracket";
+import BracketInfo from "@/components/BracketInfo";
+import TiebreakerInfo from "@/components/TiebreakerInfo";
 import SeasonCompleteBanner from "@/components/SeasonCompleteBanner";
 import { isSeasonComplete } from "@/lib/seasonStatus";
 
@@ -97,9 +99,12 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
       />
       {seasonComplete && <SeasonCompleteBanner seasonLabel={competition.season.label} />}
       <main className="mx-auto max-w-6xl space-y-6 p-4">
-        <header className="space-y-1">
-          <h1 className="text-xl font-bold text-fg">{competition.name}</h1>
-          <p className="text-xs text-faint">{competition.season.label} — Group stage</p>
+        <header className="space-y-2">
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-fg">{competition.name}</h1>
+            <p className="text-xs text-faint">{competition.season.label} — Group stage</p>
+          </div>
+          <TiebreakerInfo chainId={competition.tiebreaker} />
         </header>
 
         {groupNames.length === 0 ? (
@@ -132,6 +137,7 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
 
         <section className="space-y-2">
           <h2 className="text-[10px] font-semibold uppercase tracking-wider text-faint">Knockout bracket</h2>
+          <BracketInfo competition={competition} />
           <Bracket
             ties={projection.bracket}
             choices={scenario.bracketChoices ?? {}}
