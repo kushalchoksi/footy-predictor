@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isSeasonComplete, isSeasonCompleteFromMeta } from "@/lib/seasonStatus";
+import { isSeasonComplete, isSeasonCompleteFromMeta, seasonProgress } from "@/lib/seasonStatus";
 import type { Fixture } from "@/types";
 
 function fixture(id: number, status: Fixture["status"]): Fixture {
@@ -46,5 +46,36 @@ describe("isSeasonCompleteFromMeta", () => {
 
   it("is false when there is no end date and no winner", () => {
     expect(isSeasonCompleteFromMeta({ hasWinner: false, seasonEndDate: null }, now)).toBe(false);
+  });
+});
+
+describe("seasonProgress", () => {
+  function fixtures(played: number, remaining: number): Fixture[] {
+    const list: Fixture[] = [];
+    let id = 1;
+    for (let i = 0; i < played; i++) list.push(fixture(id++, "FINISHED"));
+    for (let i = 0; i < remaining; i++) list.push(fixture(id++, "SCHEDULED"));
+    return list;
+  }
+
+  it("locks predictions when more than half the matches remain", () => {
+    // Brasileirão-like: 18 of 38 played → 20 remain (more than half).
+    const p = seasonProgress(fixtures(18, 20));
+    expect(p.unlocked).toBe(false);
+    expect(p.played).toBe(18);
+    expect(p.total).toBe(38);
+  });
+
+  it("unlocks predictions exactly at the halfway point", () => {
+    const p = seasonProgress(fixtures(19, 19));
+    expect(p.unlocked).toBe(true);
+  });
+
+  it("stays unlocked once the season is complete", () => {
+    expect(seasonProgress(fixtures(38, 0)).unlocked).toBe(true);
+  });
+
+  it("locks when there are no fixtures at all", () => {
+    expect(seasonProgress([]).unlocked).toBe(false);
   });
 });

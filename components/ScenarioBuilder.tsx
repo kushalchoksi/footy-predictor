@@ -11,7 +11,8 @@ import ProjectedTable from "@/components/ProjectedTable";
 import ShareBar from "@/components/ShareBar";
 import SavedScenarios, { loadSaved, persistSaved } from "@/components/SavedScenarios";
 import SeasonCompleteBanner from "@/components/SeasonCompleteBanner";
-import { isSeasonComplete } from "@/lib/seasonStatus";
+import PredictionLockedBanner from "@/components/PredictionLockedBanner";
+import { isSeasonComplete, seasonProgress } from "@/lib/seasonStatus";
 
 interface Props {
   competition: Competition;
@@ -111,6 +112,8 @@ export default function ScenarioBuilder({ competition, standings, fixtures, fetc
 
   const hasCluster = scenario.cluster.length > 0;
   const seasonComplete = useMemo(() => isSeasonComplete(fixtures), [fixtures]);
+  const progress = useMemo(() => seasonProgress(fixtures), [fixtures]);
+  const predictionsLocked = !progress.unlocked;
 
   return (
     <div className="min-h-screen">
@@ -118,11 +121,26 @@ export default function ScenarioBuilder({ competition, standings, fixtures, fetc
         fetchedAt={fetchedAt}
         fixturesLeft={Math.max(0, fixturesLeft)}
         competitionName={competition.name}
+        actionsDisabled={predictionsLocked}
         onResetPicks={handleResetPicks}
         onSimulateAll={handleSimulateAll}
       />
       {seasonComplete && <SeasonCompleteBanner seasonLabel={competition.season.label} />}
-      {hasCluster ? (
+      {predictionsLocked && <PredictionLockedBanner played={progress.played} total={progress.total} />}
+      {predictionsLocked ? (
+        <main className="mx-auto max-w-6xl space-y-6 p-4">
+          <section className="space-y-2">
+            <h2 className="text-[10px] font-semibold uppercase tracking-wider text-faint">Current table</h2>
+            <ProjectedTable
+              competition={competition}
+              base={standings}
+              fixtures={fixtures}
+              outcomes={scenario.outcomes}
+              cluster={scenario.cluster}
+            />
+          </section>
+        </main>
+      ) : hasCluster ? (
         <div className="flex">
           <Sidebar
             standings={standings}

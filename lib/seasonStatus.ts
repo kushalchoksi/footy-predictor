@@ -9,6 +9,28 @@ export function isSeasonComplete(fixtures: Fixture[]): boolean {
   return fixtures.length > 0 && fixtures.every((f) => f.status === "FINISHED");
 }
 
+export interface SeasonProgress {
+  played: number;
+  total: number;
+  /** True once at least half the season's matches have been played. */
+  unlocked: boolean;
+}
+
+/**
+ * Prediction is pointless until a league is at least halfway done — before then
+ * almost anything is still possible and the projection is noise. This reports the
+ * match counts and whether predictions should be unlocked (more than half the
+ * matches still to play ⇒ locked).
+ */
+export function seasonProgress(fixtures: Fixture[]): SeasonProgress {
+  const total = fixtures.length;
+  const remaining = fixtures.filter((f) => f.status === "SCHEDULED").length;
+  const played = total - remaining;
+  // Unlocked when half or more is played, i.e. remaining is not more than half.
+  const unlocked = total > 0 && remaining * 2 <= total;
+  return { played, total, unlocked };
+}
+
 /**
  * Cheap completion check from the one-request /competitions metadata, used for the
  * home grid where fetching every competition's fixtures would exhaust the API rate

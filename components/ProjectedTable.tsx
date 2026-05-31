@@ -7,7 +7,7 @@ import { sortByChain, CHAINS } from "@/lib/tiebreakers";
 import { computeRanges } from "@/lib/ranges";
 import { detectDecided, type DecidedFlags } from "@/lib/decided";
 import { qualificationCuts } from "@/lib/competitions";
-import { computePositionInfo } from "@/lib/positionBounds";
+import { plausibleCompetitors, doubleRoundRobinMatches } from "@/lib/plausible";
 import { useMemo, useState } from "react";
 
 interface Props {
@@ -56,17 +56,20 @@ export default function ProjectedTable({ competition, base, fixtures, outcomes, 
     [ranges, relegationCut, topNCut],
   );
 
-  const positionInfo = useMemo(() => {
+  // Cluster by realistic points-per-game projection rather than pure best/worst
+  // case, so selecting a row picks the handful of teams plausibly in the same race
+  // — not everyone still mathematically in contention with half a season to play.
+  const competitorsOf = useMemo(() => {
     if (!onClusterChange || cluster.length > 0) return null;
-    return computePositionInfo(base, fixtures, outcomes);
-  }, [base, fixtures, outcomes, onClusterChange, cluster.length]);
+    return plausibleCompetitors(base, doubleRoundRobinMatches(base.length));
+  }, [base, onClusterChange, cluster.length]);
 
-  // Compute the hover band: hovered team + all its competitors
+  // Compute the hover band: hovered team + all its plausible competitors
   const hoverBandIds = useMemo<Set<TeamId>>(() => {
-    if (!hoverTeamId || !positionInfo) return new Set();
-    const competitors = positionInfo.competitorsOf.get(hoverTeamId) ?? new Set<TeamId>();
+    if (!hoverTeamId || !competitorsOf) return new Set();
+    const competitors = competitorsOf.get(hoverTeamId) ?? new Set<TeamId>();
     return new Set([hoverTeamId, ...competitors]);
-  }, [hoverTeamId, positionInfo]);
+  }, [hoverTeamId, competitorsOf]);
 
   const rows = sorted.sorted;
 
