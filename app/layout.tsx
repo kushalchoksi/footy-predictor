@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -19,10 +20,20 @@ export const metadata: Metadata = {
   description: "Model the remaining Premier League fixtures and see the projected final table.",
 };
 
+// Runs before first paint to set the theme class, avoiding a flash of the
+// wrong theme. Uses the saved preference if present, else the OS setting.
+const themeInit = `(function(){try{var s=localStorage.getItem('theme');var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;var e=document.documentElement;e.classList.toggle('dark',d);e.style.colorScheme=d?'dark':'light';}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`dark ${manrope.variable} ${jetbrainsMono.variable}`}>
-      <body className="min-h-screen bg-[#0b0f17] font-sans text-zinc-100 antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
+      <body className="min-h-screen bg-bg font-sans text-fg antialiased">
+        {children}
+        <ThemeToggle />
+      </body>
     </html>
   );
 }

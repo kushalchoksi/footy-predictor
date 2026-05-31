@@ -1,20 +1,61 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` utilities key off a `.dark` class on <html>
+   (set before paint by the init script in layout.tsx), not the OS media query.
+   `:where()` keeps specificity at 0 so `dark:` variants order naturally. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic color tokens. Light values live in :root; dark overrides under
+   :root.dark. They are exposed to utilities (bg-bg, text-fg, border-border, …)
+   via `@theme inline`, which preserves the var() reference so each utility
+   resolves against the active theme at runtime. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eceef2;
+  --surface-3: #dfe2e8;
+  --fg: #16181d;
+  --muted: #5b6470;
+  --faint: #8a93a0;
+  --border: #e3e6eb;
+  --border-strong: #c9cfd8;
+  color-scheme: light;
+}
+
+:root.dark {
+  --bg: #0b0f17;
+  --surface: #0e1219;
+  --surface-2: #1b1f27;
+  --surface-3: #2a2f3a;
+  --fg: #e6edf3;
+  --muted: #9aa3af;
+  --faint: #6b7480;
+  --border: #272b33;
+  --border-strong: #3d434e;
+  color-scheme: dark;
+}
+
 /* `inline` keeps the var() reference in the utilities instead of copying a
    self-referential `--font-sans: var(--font-sans)` into :root (which breaks
    the base layer under `next dev`). */
 @theme inline {
   --font-sans: var(--font-sans-next), system-ui, sans-serif;
   --font-mono: var(--font-mono-next), ui-monospace, monospace;
-}
 
-html {
-  color-scheme: dark;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
 }
 
 html, body {
-  background-color: #0b0f17;
-  color: #e6edf3;
+  background-color: var(--bg);
+  color: var(--fg);
 }
 
 @keyframes flipclock {

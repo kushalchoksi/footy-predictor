@@ -24,7 +24,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
       return (
         <main className="mx-auto max-w-3xl p-6">
           <h1 className="text-2xl font-bold">{competition.name}</h1>
-          <div className="mt-6 rounded border border-red-700 bg-red-950/40 p-4 text-sm text-red-200">
+          <div className="mt-6 rounded border border-red-300 bg-red-50 p-4 text-sm text-red-800 dark:border-red-700 dark:bg-red-950/40 dark:text-red-200">
             <p className="font-semibold">Data fetch failed.</p>
             <p className="mt-2">{message}</p>
           </div>

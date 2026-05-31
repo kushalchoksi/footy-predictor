@@ -50,25 +50,25 @@ export default function SavedScenarios({ refreshKey }: Props) {
   }
 
   if (items.length === 0) {
-    return <p className="text-xs text-zinc-500">No saved scenarios yet.</p>;
+    return <p className="text-xs text-muted">No saved scenarios yet.</p>;
   }
 
   return (
     <ul className="space-y-1">
       {items.map((s) => (
-        <li key={s.name} className="flex items-center justify-between rounded border border-zinc-800 px-2 py-1 text-sm">
+        <li key={s.name} className="flex items-center justify-between rounded border border-border px-2 py-1 text-sm">
           <button
             type="button"
             onClick={() => open(s.hash)}
-            className="flex-1 text-left text-zinc-200 hover:text-emerald-300"
+            className="flex-1 text-left text-fg hover:text-emerald-600 dark:hover:text-emerald-300"
           >
             {s.name}
-            <span className="ml-2 text-xs text-zinc-500">{new Date(s.savedAt).toLocaleDateString()}</span>
+            <span className="ml-2 text-xs text-faint">{new Date(s.savedAt).toLocaleDateString()}</span>
           </button>
           <button
             type="button"
             onClick={() => remove(s.name)}
-            className="flex items-center justify-center rounded p-0.5 text-zinc-500 hover:text-rose-400"
+            className="flex items-center justify-center rounded p-0.5 text-faint hover:text-rose-500 dark:hover:text-rose-400"
             aria-label={`Delete ${s.name}`}
           >
             <X size={14} aria-hidden="true" />

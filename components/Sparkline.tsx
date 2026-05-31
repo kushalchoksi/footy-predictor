@@ -14,7 +14,7 @@ interface Props {
 export default function Sparkline({ history, projection, color, width = 220, height = 36, className }: Props) {
   const all = [...history, ...projection];
   if (all.length < 2) {
-    return <div className={"flex h-[36px] items-center justify-center text-[9px] text-zinc-600 " + (className ?? "")}>—</div>;
+    return <div className={"flex h-[36px] items-center justify-center text-[9px] text-faint " + (className ?? "")}>—</div>;
   }
   const { historyD, projectionD } = useMemo(() => {
     const maxY = Math.max(1, ...all);

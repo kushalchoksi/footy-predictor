@@ -63,26 +63,26 @@ export default function TeamColumn({
   return (
     <div className="flex w-64 shrink-0 flex-col gap-2">
       <div
-        className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
+        className="rounded-lg border border-border bg-surface/40 p-3"
         style={{ borderTop: `3px solid ${palette.primary}` }}
       >
         <div className="flex items-center gap-2">
           <TeamCrest team={team.team} size={28} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium">{team.team.shortName}</div>
-            <div className="font-mono text-[11px] text-zinc-500">
-              {team.points} → <span className="text-zinc-100">{projectedSelf.points}</span>
-              <span className={delta > 0 ? "ml-1 text-emerald-400" : delta < 0 ? "ml-1 text-rose-400" : "ml-1 text-zinc-500"}>
+            <div className="font-mono text-[11px] text-faint">
+              {team.points} → <span className="text-fg">{projectedSelf.points}</span>
+              <span className={delta > 0 ? "ml-1 text-emerald-600 dark:text-emerald-400" : delta < 0 ? "ml-1 text-rose-600 dark:text-rose-400" : "ml-1 text-faint"}>
                 {delta > 0 ? `+${delta}` : delta}
               </span>
             </div>
           </div>
         </div>
-        <div className="mt-2 grid grid-cols-2 gap-y-0.5 font-mono text-[10px] text-zinc-400">
-          <div>Picked: <span className="text-zinc-200">{picked}/{remaining.length}</span></div>
-          <div>GD: <span className="text-zinc-200">{projectedSelf.goalDifference}</span></div>
-          <div>W/D/L (picked): <span className="text-zinc-200">{wins}/{draws}/{losses}</span></div>
-          <div>Unpicked: <span className="text-zinc-200">{unpicked}</span></div>
+        <div className="mt-2 grid grid-cols-2 gap-y-0.5 font-mono text-[10px] text-muted">
+          <div>Picked: <span className="text-fg">{picked}/{remaining.length}</span></div>
+          <div>GD: <span className="text-fg">{projectedSelf.goalDifference}</span></div>
+          <div>W/D/L (picked): <span className="text-fg">{wins}/{draws}/{losses}</span></div>
+          <div>Unpicked: <span className="text-fg">{unpicked}</span></div>
         </div>
         <div className="mt-2">
           {(() => {
@@ -95,14 +95,14 @@ export default function TeamColumn({
             type="button"
             onClick={onSimulate}
             title="Simulate (coming in Phase 5)"
-            className="flex-1 rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-700"
+            className="flex-1 rounded-md bg-surface-2 px-2 py-1 text-[11px] text-muted hover:bg-surface-3"
           >
             Simulate
           </button>
           <button
             type="button"
             onClick={onClearAll}
-            className="flex-1 rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-700"
+            className="flex-1 rounded-md bg-surface-2 px-2 py-1 text-[11px] text-muted hover:bg-surface-3"
           >
             Clear
           </button>
@@ -128,7 +128,7 @@ export default function TeamColumn({
           );
         })}
         {remaining.length === 0 && (
-          <p className="rounded border border-dashed border-zinc-800 p-3 text-center text-xs text-zinc-500">
+          <p className="rounded border border-dashed border-border p-3 text-center text-xs text-faint">
             No remaining fixtures.
           </p>
         )}

@@ -29,7 +29,7 @@ export default function Bracket({ ties, choices, onPick }: Props) {
   const stages = STAGE_ORDER.filter((s) => ties.some((t) => t.stage === s));
   if (stages.length === 0) {
     return (
-      <div className="rounded border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400">
+      <div className="rounded border border-border bg-surface p-4 text-sm text-muted">
         No knockout bracket available for this competition.
       </div>
     );
@@ -39,7 +39,7 @@ export default function Bracket({ ties, choices, onPick }: Props) {
       <div className="flex min-w-fit gap-4 p-2">
         {stages.map((stage) => (
           <div key={stage} className="flex min-w-[200px] flex-col gap-3">
-            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-faint">
               {STAGE_LABEL[stage]}
             </h3>
             {ties.filter((t) => t.stage === stage).map((tie) => (
@@ -65,9 +65,9 @@ function BracketTieCard({
   onPick: (tieId: string, teamId: TeamId) => void;
 }) {
   return (
-    <div className="rounded border border-zinc-800 bg-zinc-950">
+    <div className="rounded border border-border bg-surface">
       <Slot tie={tie} team={tie.homeTeam} feeder={tie.feederHome} winnerId={winnerId} onPick={onPick} />
-      <div className="border-t border-zinc-800" />
+      <div className="border-t border-border" />
       <Slot tie={tie} team={tie.awayTeam} feeder={tie.feederAway} winnerId={winnerId} onPick={onPick} />
     </div>
   );
@@ -91,8 +91,8 @@ function Slot({
       onClick={() => team && onPick(tie.id, team.id)}
       className={
         "flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition " +
-        (clickable ? "hover:bg-zinc-900 " : "cursor-not-allowed text-zinc-600 ") +
-        (isWinner ? "bg-emerald-950/40 font-semibold text-emerald-200" : "text-zinc-300")
+        (clickable ? "hover:bg-surface-2 " : "cursor-not-allowed text-faint ") +
+        (isWinner ? "bg-emerald-100 font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200" : "text-muted")
       }
     >
       {team ? (
@@ -101,7 +101,7 @@ function Slot({
           <span className="truncate">{team.shortName}</span>
         </>
       ) : (
-        <span className="italic text-zinc-500">Winner of {feeder ?? "TBD"}</span>
+        <span className="italic text-faint">Winner of {feeder ?? "TBD"}</span>
       )}
     </button>
   );

@@ -12,7 +12,7 @@ export default function HomeGrid({ competitions }: Props) {
   return (
     <div className="space-y-10">
       <section>
-        <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Leagues</h2>
+        <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-faint">Leagues</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {leagues.map((c) => <CompetitionCard key={c.code} competition={c} />)}
         </div>
@@ -20,7 +20,7 @@ export default function HomeGrid({ competitions }: Props) {
 
       {tournaments.length > 0 && (
         <section>
-          <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Tournaments</h2>
+          <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-faint">Tournaments</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {tournaments.map((c) => <CompetitionCard key={c.code} competition={c} />)}
           </div>

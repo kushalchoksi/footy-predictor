@@ -91,12 +91,12 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
       />
       <main className="mx-auto max-w-6xl space-y-6 p-4">
         <header className="space-y-1">
-          <h1 className="text-xl font-bold text-zinc-100">{competition.name}</h1>
-          <p className="text-xs text-zinc-500">{competition.season.label} — Group stage</p>
+          <h1 className="text-xl font-bold text-fg">{competition.name}</h1>
+          <p className="text-xs text-faint">{competition.season.label} — Group stage</p>
         </header>
 
         {groupNames.length === 0 ? (
-          <section className="rounded border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400">
+          <section className="rounded border border-border bg-surface p-4 text-sm text-muted">
             No group-stage fixtures available yet for this competition.
           </section>
         ) : (
@@ -124,7 +124,7 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
         )}
 
         <section className="space-y-2">
-          <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Knockout bracket</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider text-faint">Knockout bracket</h2>
           <Bracket
             ties={projection.bracket}
             choices={scenario.bracketChoices ?? {}}
@@ -133,7 +133,7 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Finishing positions</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider text-faint">Finishing positions</h2>
           <FinishingPositions projection={projection} />
         </section>
       </main>
@@ -161,9 +161,9 @@ function FinishingPositions({ projection }: { projection: ReturnType<typeof proj
         const t = teams.get(id);
         if (!t) return null;
         return (
-          <li key={id} className="flex items-center justify-between rounded border border-zinc-800 bg-zinc-950 px-2 py-1">
+          <li key={id} className="flex items-center justify-between rounded border border-border bg-surface px-2 py-1">
             <span className="truncate">{t.shortName}</span>
-            <span className="text-zinc-500">{pos}</span>
+            <span className="text-faint">{pos}</span>
           </li>
         );
       })}

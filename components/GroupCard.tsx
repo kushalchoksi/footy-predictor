@@ -25,11 +25,11 @@ export default function GroupCard({
 }: Props) {
   const qualifiedIds = new Set(qualified.map((t) => t.id));
   return (
-    <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-950 p-3">
-      <h3 className="text-sm font-semibold text-zinc-200">{displayGroupName(groupName)}</h3>
+    <div className="space-y-3 rounded-lg border border-border bg-surface p-3">
+      <h3 className="text-sm font-semibold text-fg">{displayGroupName(groupName)}</h3>
 
       <table className="w-full text-xs">
-        <thead className="text-[10px] uppercase tracking-wider text-zinc-500">
+        <thead className="text-[10px] uppercase tracking-wider text-faint">
           <tr>
             <th className="text-left">Team</th>
             <th className="text-right">P</th>
@@ -39,7 +39,7 @@ export default function GroupCard({
         </thead>
         <tbody>
           {standings.map((row) => (
-            <tr key={row.team.id} className={qualifiedIds.has(row.team.id) ? "bg-emerald-950/30" : ""}>
+            <tr key={row.team.id} className={qualifiedIds.has(row.team.id) ? "bg-emerald-100 dark:bg-emerald-950/30" : ""}>
               <td className="py-1">
                 <div className="flex items-center gap-2">
                   <TeamCrest team={row.team} size={14} />
@@ -85,7 +85,7 @@ function FixtureRow({
   const activeKind = outcome?.kind ?? finalKind;
 
   return (
-    <li className="flex items-center gap-2 rounded bg-zinc-900/40 px-2 py-1 text-[11px]">
+    <li className="flex items-center gap-2 rounded bg-surface-2/40 px-2 py-1 text-[11px]">
       <span className="flex-1 truncate text-right">{fixture.homeTeam.shortName}</span>
 
       <Pick label="1" active={activeKind === "H"} disabled={finished} onClick={() => onPickOutcome("H")} />
@@ -98,7 +98,7 @@ function FixtureRow({
         <button
           type="button"
           onClick={onClear}
-          className="text-zinc-500 hover:text-zinc-300"
+          className="text-faint hover:text-fg"
           aria-label="Clear"
         >
           ×
@@ -126,8 +126,8 @@ function Pick({
         (active
           ? "bg-emerald-700 text-white"
           : disabled
-            ? "bg-zinc-800 text-zinc-600"
-            : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700")
+            ? "bg-surface-2 text-faint"
+            : "bg-surface-2 text-muted hover:bg-surface-3")
       }
     >
       {label}
