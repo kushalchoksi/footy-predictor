@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Competition, Fixture, Outcome, OutcomeKind, OutcomeMap, Scenario, Standing } from "@/types";
+import type { Competition, Fixture, Outcome, OutcomeMap, Scenario, Standing } from "@/types";
 import { projectTournament } from "@/lib/tournament/projection";
 import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import TopBar from "@/components/TopBar";
@@ -43,10 +43,12 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
     updateScenario({ ...scenario, outcomes });
   }
 
-  function handlePickOutcome(fixtureId: number, kind: OutcomeKind) {
+  function handleSetScore(fixtureId: number, homeScore: number, awayScore: number) {
     setOutcomeFor(fixtureId, (prev) => ({
-      kind,
+      kind: homeScore > awayScore ? "H" : homeScore < awayScore ? "A" : "D",
       locked: prev?.locked ?? false,
+      homeScore,
+      awayScore,
     }));
   }
 
@@ -120,7 +122,7 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
                   standings={groupStandings}
                   qualified={qualified}
                   outcomes={scenario.outcomes}
-                  onPickOutcome={handlePickOutcome}
+                  onSetScore={handleSetScore}
                   onClear={handleClear}
                 />
               );

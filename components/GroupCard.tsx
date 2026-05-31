@@ -1,7 +1,8 @@
 "use client";
 
-import type { Fixture, Outcome, OutcomeKind, OutcomeMap, Standing, Team } from "@/types";
+import type { Fixture, Outcome, OutcomeMap, Standing, Team } from "@/types";
 import TeamCrest from "@/components/TeamCrest";
+import FlipClockDigit from "@/components/FlipClockDigit";
 import { LEAGUE_PHASE_GROUP } from "@/lib/tournament/groupStage";
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
   standings: Standing[];
   qualified: Team[];
   outcomes: OutcomeMap;
-  onPickOutcome: (fixtureId: number, kind: OutcomeKind) => void;
+  onSetScore: (fixtureId: number, homeScore: number, awayScore: number) => void;
   onClear: (fixtureId: number) => void;
 }
 
@@ -21,7 +22,7 @@ function displayGroupName(raw: string): string {
 
 export default function GroupCard({
   groupName, fixtures, standings, qualified, outcomes,
-  onPickOutcome, onClear,
+  onSetScore, onClear,
 }: Props) {
   const qualifiedIds = new Set(qualified.map((t) => t.id));
   return (
@@ -60,7 +61,7 @@ export default function GroupCard({
             key={fix.id}
             fixture={fix}
             outcome={outcomes[fix.id]}
-            onPickOutcome={(kind) => onPickOutcome(fix.id, kind)}
+            onSetScore={(h, a) => onSetScore(fix.id, h, a)}
             onClear={() => onClear(fix.id)}
           />
         ))}
@@ -69,68 +70,60 @@ export default function GroupCard({
   );
 }
 
+/** Default scoreline shown when a scheduled match has no scoreline yet. Derived
+ *  from the pick's result kind (so a kind-only pick reads as 1–0 / 0–0) or 0–0. */
+function defaultScores(outcome: Outcome | undefined): { home: number; away: number } {
+  return {
+    home: outcome?.homeScore ?? (outcome?.kind === "H" ? 1 : 0),
+    away: outcome?.awayScore ?? (outcome?.kind === "A" ? 1 : 0),
+  };
+}
+
 function FixtureRow({
-  fixture, outcome, onPickOutcome, onClear,
+  fixture, outcome, onSetScore, onClear,
 }: {
   fixture: Fixture;
   outcome: Outcome | undefined;
-  onPickOutcome: (kind: OutcomeKind) => void;
+  onSetScore: (homeScore: number, awayScore: number) => void;
   onClear: () => void;
 }) {
   const finished = fixture.status === "FINISHED";
-  const finalKind: OutcomeKind | null = finished
-    ? (fixture.homeGoals ?? 0) > (fixture.awayGoals ?? 0) ? "H"
-    : (fixture.homeGoals ?? 0) < (fixture.awayGoals ?? 0) ? "A" : "D"
-    : null;
-  const activeKind = outcome?.kind ?? finalKind;
+  const homeScore = finished ? (fixture.homeGoals ?? 0) : defaultScores(outcome).home;
+  const awayScore = finished ? (fixture.awayGoals ?? 0) : defaultScores(outcome).away;
+  const hasPick = !finished && outcome !== undefined;
 
   return (
-    <li className="flex items-center gap-2 rounded bg-surface-2/40 px-2 py-1 text-[11px]">
+    <li className="flex items-center gap-1.5 rounded bg-surface-2/40 px-2 py-1 text-[11px]">
+      <TeamCrest team={fixture.homeTeam} size={16} />
       <span className="flex-1 truncate text-right">{fixture.homeTeam.shortName}</span>
 
-      <Pick label="1" active={activeKind === "H"} disabled={finished} onClick={() => onPickOutcome("H")} />
-      <Pick label="X" active={activeKind === "D"} disabled={finished} onClick={() => onPickOutcome("D")} />
-      <Pick label="2" active={activeKind === "A"} disabled={finished} onClick={() => onPickOutcome("A")} />
+      <FlipClockDigit
+        value={homeScore}
+        onChange={(n) => onSetScore(n, awayScore)}
+        disabled={finished}
+        size={26}
+        label={`${fixture.homeTeam.shortName} goals`}
+      />
+      <span className="font-mono text-faint">–</span>
+      <FlipClockDigit
+        value={awayScore}
+        onChange={(n) => onSetScore(homeScore, n)}
+        disabled={finished}
+        size={26}
+        label={`${fixture.awayTeam.shortName} goals`}
+      />
 
       <span className="flex-1 truncate">{fixture.awayTeam.shortName}</span>
+      <TeamCrest team={fixture.awayTeam} size={16} />
 
-      {!finished && outcome && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="text-faint hover:text-fg"
-          aria-label="Clear"
-        >
-          ×
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onClear}
+        className={"text-faint hover:text-fg " + (hasPick ? "" : "invisible")}
+        aria-label="Clear pick"
+      >
+        ×
+      </button>
     </li>
-  );
-}
-
-function Pick({
-  label, active, disabled, onClick,
-}: {
-  label: string;
-  active: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={
-        "h-5 w-5 rounded text-[10px] font-semibold transition " +
-        (active
-          ? "bg-emerald-700 text-white"
-          : disabled
-            ? "bg-surface-2 text-faint"
-            : "bg-surface-2 text-muted hover:bg-surface-3")
-      }
-    >
-      {label}
-    </button>
   );
 }

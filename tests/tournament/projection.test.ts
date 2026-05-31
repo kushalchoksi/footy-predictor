@@ -8,26 +8,38 @@ function team(id: number, name: string): Team {
 }
 
 describe("projectTournament", () => {
-  it("returns finishingPositions including 'Group stage' for non-qualifiers and 'R16' for qualifiers", () => {
+  it("labels group qualifiers with the first knockout round and non-qualifiers 'Group stage'", () => {
     const ec = getCompetition("EC")!;
-    const a = team(1, "A"), b = team(2, "B"), c = team(3, "C"), d = team(4, "D");
-    const groupFixtures: Fixture[] = [
-      { id: 1, matchday: 1, homeTeam: a, awayTeam: b, status: "SCHEDULED", homeGoals: null, awayGoals: null, utcDate: "x", group: "GROUP_A", stage: "GROUP_STAGE" },
-      { id: 2, matchday: 1, homeTeam: c, awayTeam: d, status: "SCHEDULED", homeGoals: null, awayGoals: null, utcDate: "x", group: "GROUP_A", stage: "GROUP_STAGE" },
-      { id: 3, matchday: 1, homeTeam: a, awayTeam: c, status: "SCHEDULED", homeGoals: null, awayGoals: null, utcDate: "x", group: "GROUP_A", stage: "GROUP_STAGE" },
-      { id: 4, matchday: 1, homeTeam: b, awayTeam: d, status: "SCHEDULED", homeGoals: null, awayGoals: null, utcDate: "x", group: "GROUP_A", stage: "GROUP_STAGE" },
-      { id: 5, matchday: 1, homeTeam: a, awayTeam: d, status: "SCHEDULED", homeGoals: null, awayGoals: null, utcDate: "x", group: "GROUP_A", stage: "GROUP_STAGE" },
-      { id: 6, matchday: 1, homeTeam: b, awayTeam: c, status: "SCHEDULED", homeGoals: null, awayGoals: null, utcDate: "x", group: "GROUP_A", stage: "GROUP_STAGE" },
-    ];
-    const outcomes = {
-      1: { kind: "H" as const, locked: false }, 3: { kind: "H" as const, locked: false }, 5: { kind: "H" as const, locked: false },
-      4: { kind: "H" as const, locked: false }, 6: { kind: "H" as const, locked: false }, 2: { kind: "H" as const, locked: false },
-    };
-    const result = projectTournament(ec, [], groupFixtures, outcomes, {});
-    expect(result.finishingPositions.get(1)).toBe("R16");
-    expect(result.finishingPositions.get(2)).toBe("R16");
-    expect(result.finishingPositions.get(3)).toBe("Group stage");
+    // Six full groups of four — the real Euro shape, so the 16-slot bracket fills.
+    // In every group the home side always wins, giving a clean 1 > 2 > 3 > 4 order
+    // (team id `g*10 + rank`).
+    const fixtures: Fixture[] = [];
+    const outcomes: Record<number, { kind: "H"; locked: boolean }> = {};
+    let fid = 1;
+    ["A", "B", "C", "D", "E", "F"].forEach((L, gi) => {
+      const base = gi * 10;
+      const t = (r: number) => team(base + r, `${L}${r}`);
+      const pairs: [number, number][] = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]];
+      for (const [h, a] of pairs) {
+        fixtures.push({
+          id: fid, matchday: 1, homeTeam: t(h), awayTeam: t(a), status: "SCHEDULED",
+          homeGoals: null, awayGoals: null, utcDate: "x", group: `GROUP_${L}`, stage: "GROUP_STAGE",
+        });
+        outcomes[fid] = { kind: "H", locked: false };
+        fid++;
+      }
+    });
+    const result = projectTournament(ec, [], fixtures, outcomes, {});
+
+    // Group winners and runners-up always reach the Round of 16.
+    expect(result.finishingPositions.get(1)).toBe("R16");   // Group A winner
+    expect(result.finishingPositions.get(12)).toBe("R16");  // Group B runner-up
+    // Bottom teams never qualify.
     expect(result.finishingPositions.get(4)).toBe("Group stage");
+    // Only the 4 best third-placed teams (lowest id on equal record) qualify;
+    // groups E and F thirds miss out.
+    expect(result.finishingPositions.get(3)).toBe("R16");           // Group A third
+    expect(result.finishingPositions.get(53)).toBe("Group stage");  // Group F third
   });
 
   it("updates winner's finishingPosition to 'Winner' and runner-up's to 'Runner-up' when FINAL choice is set", () => {

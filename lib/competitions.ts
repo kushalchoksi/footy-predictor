@@ -153,8 +153,10 @@ export const COMPETITIONS: Competition[] = [
           { id: "PO5" }, { id: "PO6" }, { id: "PO7" }, { id: "PO8" },
         ],
         LAST_16: [
-          { id: "R16-1" }, { id: "R16-2" }, { id: "R16-3" }, { id: "R16-4" },
-          { id: "R16-5" }, { id: "R16-6" }, { id: "R16-7" }, { id: "R16-8" },
+          { id: "R16-1", feederAway: "PO1" }, { id: "R16-2", feederAway: "PO2" },
+          { id: "R16-3", feederAway: "PO3" }, { id: "R16-4", feederAway: "PO4" },
+          { id: "R16-5", feederAway: "PO5" }, { id: "R16-6", feederAway: "PO6" },
+          { id: "R16-7", feederAway: "PO7" }, { id: "R16-8", feederAway: "PO8" },
         ],
         QUARTER_FINALS: [
           { id: "QF1", feederHome: "R16-1", feederAway: "R16-2" },

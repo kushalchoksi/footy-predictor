@@ -4,6 +4,7 @@ import type {
 import { CHAINS } from "@/lib/tiebreakers";
 import { projectGroups, type GroupStageResult } from "@/lib/tournament/groupStage";
 import { buildBracket, resolveBracket } from "@/lib/tournament/bracket";
+import { seedBracket } from "@/lib/tournament/seeding";
 
 export interface TournamentProjection {
   groupStandings: Map<string, Standing[]>;
@@ -46,9 +47,33 @@ export function projectTournament(
 
   const groups: GroupStageResult = projectGroups(baseStandings, groupFixtures, outcomes, chain);
 
+  // Seed the first knockout round from the projected group standings so the bracket
+  // reflects the (possibly simulated) group results, then resolve later rounds from
+  // their feeders + the user's winner picks.
+  const { seeds, qualifiedIds } = seedBracket(competition, groups.groupStandings);
+  const seedingActive = qualifiedIds.size > 0;
+
+  // When seeding is active we ignore the API's resolved knockout fixtures — otherwise
+  // later rounds would show the real historical teams, which wouldn't follow from the
+  // simulated first round. Only when we can't seed (no group data) do we fall back to
+  // the API-attached bracket so completed editions still show their real bracket.
   const ties = competition.bracketTemplate
-    ? resolveBracket(buildBracket(competition.bracketTemplate, knockoutFixtures), bracketChoices)
+    ? resolveBracket(
+        buildBracket(competition.bracketTemplate, seedingActive ? [] : knockoutFixtures).map((t) => {
+          const seed = seeds[t.id];
+          if (!seed) return t;
+          return { ...t, homeTeam: seed.home ?? t.homeTeam, awayTeam: seed.away ?? t.awayTeam };
+        }),
+        bracketChoices,
+      )
     : [];
+
+  // Per-group qualifier highlight derived from the seeding (top two + best thirds,
+  // or top 24 for the Champions League league phase), not just the raw top two.
+  const qualified = new Map<string, Team[]>();
+  for (const [groupName, standings] of groups.groupStandings) {
+    qualified.set(groupName, standings.filter((s) => qualifiedIds.has(s.team.id)).map((s) => s.team));
+  }
 
   const finishingPositions = new Map<TeamId, string>();
 
@@ -58,13 +83,13 @@ export function projectTournament(
     for (const s of standings) finishingPositions.set(s.team.id, label);
   }
 
-  // 1b. Qualified teams (group winners / runners-up) have at minimum reached the first knockout round.
+  // 1b. Qualified teams have at minimum reached the first knockout round.
   //     Determine the first knockout stage present in the bracket template.
   const firstKnockoutStage = competition.bracketTemplate
     ? KNOCKOUT_ORDER.find((s) => competition.bracketTemplate!.rounds[s]?.length)
     : undefined;
   if (firstKnockoutStage) {
-    for (const qualifiedTeams of groups.qualified.values()) {
+    for (const qualifiedTeams of qualified.values()) {
       for (const t of qualifiedTeams) {
         finishingPositions.set(t.id, STAGE_LABEL[firstKnockoutStage]);
       }
@@ -112,7 +137,7 @@ export function projectTournament(
 
   return {
     groupStandings: groups.groupStandings,
-    qualified: groups.qualified,
+    qualified,
     bracket: ties,
     finishingPositions,
   };

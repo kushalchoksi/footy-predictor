@@ -85,6 +85,28 @@ const matchesResponseSchema = z.object({
   matches: z.array(matchSchema),
 });
 
+const competitionsListSchema = z.object({
+  competitions: z.array(
+    z.object({
+      code: z.string(),
+      currentSeason: z
+        .object({
+          endDate: z.string().nullable().optional(),
+          currentMatchday: z.number().nullable().optional(),
+          winner: z.object({ id: z.number() }).nullable().optional(),
+        })
+        .nullable()
+        .optional(),
+    }),
+  ),
+});
+
+export interface CompetitionMeta {
+  code: string;
+  seasonEndDate: string | null;
+  hasWinner: boolean;
+}
+
 function normalizeTeam(t: z.infer<typeof teamSchema>): Team {
   return {
     id: t.id,
@@ -126,6 +148,28 @@ async function fetchFromApi(path: string): Promise<unknown> {
     throw new Error(`football-data.org ${path} returned ${res.status}`);
   }
   return res.json();
+}
+
+/**
+ * Season metadata for every competition in the plan, in ONE request. Used by the
+ * home grid to flag completed seasons without firing a fixtures call per
+ * competition (which blows the free tier's 10-requests/minute limit). Returns a
+ * plain array (not a Map) so it survives unstable_cache's JSON serialization.
+ */
+export function getCompetitionsMeta(): Promise<CompetitionMeta[]> {
+  return unstable_cache(
+    async (): Promise<CompetitionMeta[]> => {
+      const raw = await fetchFromApi(`/competitions`);
+      const parsed = competitionsListSchema.parse(raw);
+      return parsed.competitions.map((c) => ({
+        code: c.code,
+        seasonEndDate: c.currentSeason?.endDate ?? null,
+        hasWinner: Boolean(c.currentSeason?.winner),
+      }));
+    },
+    ["competitions-meta"],
+    { revalidate: REVALIDATE_SECONDS },
+  )();
 }
 
 export function getStandings(code: string): Promise<Standing[]> {
