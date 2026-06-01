@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-bg font-sans text-fg antialiased">
         {children}
         <ThemeToggle />
+        <Analytics />
       </body>
     </html>
   );
