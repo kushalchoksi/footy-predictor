@@ -25,7 +25,7 @@ const traditionalTemplate = {
 } as Competition["bracketTemplate"];
 
 const euroLike: Competition = {
-  code: "TEST_EC", name: "Test Euro", country: "X", emblem: "", format: "tournament",
+  code: "TEST_EC", name: "Test Euro", country: "X", emblem: "", accent: "#000", flagUrl: "", trophyUrl: "", format: "tournament",
   tiebreaker: "uefa", season: { startYear: 2024, label: "t" }, groupCount: 6,
   bracketTemplate: traditionalTemplate,
 };
@@ -82,7 +82,7 @@ describe("seedBracket — Champions League league phase", () => {
   } as Competition["bracketTemplate"];
 
   const cl: Competition = {
-    code: "TEST_CL", name: "Test CL", country: "X", emblem: "", format: "tournament",
+    code: "TEST_CL", name: "Test CL", country: "X", emblem: "", accent: "#000", flagUrl: "", trophyUrl: "", format: "tournament",
     tiebreaker: "uefa", season: { startYear: 2025, label: "t" }, groupCount: 1,
     bracketTemplate: clTemplate,
   };

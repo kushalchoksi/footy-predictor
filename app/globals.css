@@ -66,3 +66,121 @@ html, body {
 .animate-flipclock {
   animation: flipclock 120ms ease-out;
 }
+
+/* ===================================================================== */
+/* Home-page hover "takeover" — FIFA-style flag + trophy scene.           */
+/* Driven by the active competition's --accent (set inline on the layers  */
+/* and cards). Default (no hover) renders nothing but the normal page, so  */
+/* there is no scene and no layout shift before any interaction. The      */
+/* data-treatment="stadium" hook lets future treatments (gold ray-burst,  */
+/* flag wash) layer on without touching the markup.                       */
+/* ===================================================================== */
+
+/* Trophy corner anchor — change these two to move it to any corner. */
+.tk-trophy-layer {
+  --tk-trophy-left: clamp(-1rem, 1vw, 2rem);
+  --tk-trophy-bottom: -1rem;
+}
+
+/* Backdrop images (flag for leagues, banner for tournaments) crossfade; the
+   active one also drifts (ken burns). */
+.tk-backdrop {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  will-change: opacity, transform;
+}
+.tk-backdrop.is-on {
+  opacity: 1;
+  animation: tk-kenburns 20s ease-in-out infinite alternate;
+}
+
+/* Legibility scrim + accent-tinted radial vignette (glow biased to the
+   bottom-left, where the trophy stands). */
+.tk-scrim {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 9, 12, 0.58) 0%,
+    rgba(8, 9, 12, 0.32) 40%,
+    rgba(8, 9, 12, 0.74) 100%
+  );
+}
+.tk-vignette {
+  background:
+    radial-gradient(120% 92% at 50% 38%, transparent 36%, rgba(5, 6, 9, 0.72) 100%),
+    radial-gradient(
+      80% 70% at 26% 64%,
+      color-mix(in srgb, var(--accent) 28%, transparent),
+      transparent 72%
+    );
+}
+
+/* Accent glow pooled under the trophy. */
+.tk-pedestal {
+  position: absolute;
+  left: clamp(-4rem, 4vw, 6rem);
+  bottom: -3rem;
+  width: min(48rem, 70vw);
+  height: 18rem;
+  opacity: 0;
+  filter: blur(28px);
+  transition: opacity 0.5s ease;
+  background: radial-gradient(
+    60% 70% at 42% 50%,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    transparent 70%
+  );
+}
+.tk-pedestal.is-on {
+  opacity: 1;
+}
+
+/* The left-aligned trophy hero — sits in the corner, in front of the flag
+   but behind the cards. Crossfades between competitions; gently floats. */
+.tk-trophy {
+  position: absolute;
+  left: var(--tk-trophy-left, clamp(-1rem, 2vw, 3rem));
+  bottom: var(--tk-trophy-bottom, -1rem);
+  /* 1.3x the original clamp(16rem,32vw,30rem) / clamp(22rem,70vh,44rem). */
+  width: clamp(20.8rem, 41.6vw, 39rem);
+  height: clamp(28.6rem, 91vh, 57.2rem);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  filter: drop-shadow(0 1.5rem 2.5rem rgba(0, 0, 0, 0.55));
+  will-change: opacity, transform;
+}
+.tk-trophy.is-on {
+  opacity: 1;
+  animation: tk-float 6s ease-in-out infinite alternate;
+}
+
+@keyframes tk-kenburns {
+  from { transform: scale(1.05) translate(0, 0); }
+  to   { transform: scale(1.16) translate(-2%, -1.5%); }
+}
+@keyframes tk-float {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-14px); }
+}
+
+/* Card states driven by the takeover. */
+.card--active {
+  transform: translateY(-4px) scale(1.02);
+  border-color: color-mix(in srgb, var(--accent) 55%, white);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 45%, white),
+    0 18px 50px -12px color-mix(in srgb, var(--accent) 70%, transparent),
+    0 8px 22px rgba(0, 0, 0, 0.28);
+}
+.card--dim {
+  transform: scale(0.99);
+  opacity: 0.35;
+  filter: saturate(0.7) brightness(0.96);
+}
+
+/* Respect reduced motion: keep the scene + crossfades, drop the drifting. */
+@media (prefers-reduced-motion: reduce) {
+  .tk-backdrop.is-on,
+  .tk-trophy.is-on {
+    animation: none;
+  }
+}

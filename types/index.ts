@@ -131,6 +131,12 @@ export interface Competition {
   bands?: QualificationBand[];
   groupCount?: number;
   bracketTemplate?: BracketTemplate;
+  /** Brand-ish accent hex used for the home-page hover takeover (glows/vignette). */
+  accent: string;
+  /** Full country/region flag image for the takeover backdrop (full-bleed). */
+  flagUrl: string;
+  /** Transparent PNG render of the trophy/championship — the takeover hero image. */
+  trophyUrl: string;
 }
 
 export interface BracketTie {

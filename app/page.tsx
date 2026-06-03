@@ -23,13 +23,7 @@ async function getCompleteCodes(): Promise<string[]> {
 
 export default async function Page() {
   const completeCodes = await getCompleteCodes();
-  return (
-    <main className="mx-auto max-w-5xl space-y-6 p-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-fg">Footy Scenarios</h1>
-        <p className="text-sm text-muted">Pick a competition to simulate.</p>
-      </header>
-      <HomeGrid competitions={COMPETITIONS} completeCodes={completeCodes} />
-    </main>
-  );
+  // HomeGrid owns the page chrome (masthead + grid) so the hover takeover can
+  // whiten the heading in step with the scene.
+  return <HomeGrid competitions={COMPETITIONS} completeCodes={completeCodes} />;
 }
