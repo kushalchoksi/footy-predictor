@@ -24,11 +24,21 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
 }
 
+/**
+ * "market" — strength-aware: each team's scoring rate is driven by its own
+ * attack/defence form (the realistic model; our offline stand-in for betting odds).
+ * "random" — strength-blind: both sides get the league-average rate, so results
+ * are pure chance with no favourite bias.
+ */
+export type SimStrategy = "market" | "random";
+
 export interface SimulateOptions {
   /** Restrict simulation to fixtures involving any of these team ids. Empty/undefined → all teams. */
   teamScope?: TeamId[];
   /** Replace existing unlocked picks too (default true). Locked outcomes are always preserved. */
   overwriteUnlocked?: boolean;
+  /** Scoring model (default "market"). */
+  strategy?: SimStrategy;
   rng?: RNG;
 }
 
@@ -40,6 +50,7 @@ export function simulate(
 ): OutcomeMap {
   const rng = opts.rng ?? defaultRng;
   const overwrite = opts.overwriteUnlocked ?? true;
+  const strategy = opts.strategy ?? "market";
   const scope = opts.teamScope && opts.teamScope.length > 0 ? new Set(opts.teamScope) : null;
 
   // League-wide attack baseline.
@@ -66,13 +77,26 @@ export function simulate(
     const away = byId.get(fix.awayTeam.id);
     if (!home || !away) continue;
 
-    const homeAttack = home.goalsFor / Math.max(home.playedGames, 1);
-    const awayDefense = away.goalsAgainst / Math.max(away.playedGames, 1);
-    const awayAttack = away.goalsFor / Math.max(away.playedGames, 1);
-    const homeDefense = home.goalsAgainst / Math.max(home.playedGames, 1);
+    // Per-team rates fall back to the league average when a side has no games yet
+    // (tournaments before kickoff) so "market" still produces realistic scorelines
+    // instead of collapsing to 0-0.
+    const rate = (s: Standing, key: "goalsFor" | "goalsAgainst") =>
+      s.playedGames > 0 ? s[key] / s.playedGames : leagueAvg;
 
-    const lambdaH = clamp((homeAttack * awayDefense / leagueAvg) * HOME_ADV, MIN_RATE, MAX_RATE);
-    const lambdaA = clamp((awayAttack * homeDefense / leagueAvg) * AWAY_ADV, MIN_RATE, MAX_RATE);
+    let lambdaH: number;
+    let lambdaA: number;
+    if (strategy === "random") {
+      // Strength-blind: every match is an even, league-average contest.
+      lambdaH = clamp(leagueAvg, MIN_RATE, MAX_RATE);
+      lambdaA = clamp(leagueAvg, MIN_RATE, MAX_RATE);
+    } else {
+      const homeAttack = rate(home, "goalsFor");
+      const awayDefense = rate(away, "goalsAgainst");
+      const awayAttack = rate(away, "goalsFor");
+      const homeDefense = rate(home, "goalsAgainst");
+      lambdaH = clamp((homeAttack * awayDefense / leagueAvg) * HOME_ADV, MIN_RATE, MAX_RATE);
+      lambdaA = clamp((awayAttack * homeDefense / leagueAvg) * AWAY_ADV, MIN_RATE, MAX_RATE);
+    }
 
     const hg = Math.min(MAX_GOALS, poissonSample(lambdaH, rng));
     const ag = Math.min(MAX_GOALS, poissonSample(lambdaA, rng));

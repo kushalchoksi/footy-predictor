@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import SimulateMenu, { type SimulateRequest } from "@/components/SimulateMenu";
 
 interface Props {
   fetchedAt: string;
@@ -9,11 +10,18 @@ interface Props {
   competitionName: string;
   /** When true, hide the picks counter and disable the pick actions (e.g. before the season is halfway). */
   actionsDisabled?: boolean;
+  /** Enables "Simulate rest" in the simulate menu. */
+  hasPicks?: boolean;
+  /** Tournaments show the group-stage / whole-tournament scope toggle; leagues don't. */
+  showSimulateScope?: boolean;
   onResetPicks: () => void;
-  onSimulateAll: () => void;
+  onSimulate: (req: SimulateRequest) => void;
 }
 
-export default function TopBar({ fetchedAt, fixturesLeft, competitionName, actionsDisabled = false, onResetPicks, onSimulateAll }: Props) {
+export default function TopBar({
+  fetchedAt, fixturesLeft, competitionName, actionsDisabled = false,
+  hasPicks = false, showSimulateScope = false, onResetPicks, onSimulate,
+}: Props) {
   // The "updated" time is the viewer's local time, which depends on their locale
   // and timezone — formatting it during SSR mismatches the client and breaks
   // hydration. Compute it only after mount so server and first client render agree.
@@ -51,14 +59,12 @@ export default function TopBar({ fetchedAt, fixturesLeft, competitionName, actio
         >
           Reset picks
         </button>
-        <button
-          type="button"
-          onClick={onSimulateAll}
+        <SimulateMenu
           disabled={actionsDisabled}
-          className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-600"
-        >
-          Simulate all
-        </button>
+          hasPicks={hasPicks}
+          showScope={showSimulateScope}
+          onSimulate={onSimulate}
+        />
       </div>
     </header>
   );

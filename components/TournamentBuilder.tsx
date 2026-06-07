@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Competition, Fixture, Outcome, OutcomeMap, Scenario, Standing } from "@/types";
 import { projectTournament } from "@/lib/tournament/projection";
+import { simulateTournament } from "@/lib/tournament/simulate";
 import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import TopBar from "@/components/TopBar";
+import type { SimulateRequest } from "@/components/SimulateMenu";
 import GroupCard from "@/components/GroupCard";
 import Bracket from "@/components/Bracket";
 import BracketInfo from "@/components/BracketInfo";
@@ -58,6 +60,21 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
     setOutcomeFor(fixtureId, () => undefined);
   }
 
+  function handleResetPicks() {
+    updateScenario({ ...scenario, outcomes: {}, bracketChoices: {} });
+  }
+
+  function handleSimulate(req: SimulateRequest) {
+    const { outcomes, bracketChoices } = simulateTournament(
+      competition,
+      standings,
+      fixtures,
+      { outcomes: scenario.outcomes, bracketChoices: scenario.bracketChoices },
+      req,
+    );
+    updateScenario({ ...scenario, outcomes, bracketChoices });
+  }
+
   const groupFixtures = useMemo(
     () => fixtures.filter((f) =>
       (f.group && f.group.length > 0) ||
@@ -79,6 +96,8 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
 
   const totalScheduled = useMemo(() => fixtures.filter((f) => f.status === "SCHEDULED").length, [fixtures]);
   const fixturesLeft = totalScheduled - Object.keys(scenario.outcomes).length;
+  const hasPicks = Object.keys(scenario.outcomes).length > 0
+    || Object.keys(scenario.bracketChoices ?? {}).length > 0;
 
   function handlePickWinner(tieId: string, teamId: number) {
     const nextChoices = { ...(scenario.bracketChoices ?? {}), [tieId]: teamId };
@@ -94,8 +113,10 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
         fetchedAt={fetchedAt}
         fixturesLeft={Math.max(0, fixturesLeft)}
         competitionName={competition.name}
-        onResetPicks={() => updateScenario({ ...scenario, outcomes: {} })}
-        onSimulateAll={() => { /* Simulate-all for tournaments lands later. */ }}
+        hasPicks={hasPicks}
+        showSimulateScope
+        onResetPicks={handleResetPicks}
+        onSimulate={handleSimulate}
       />
       {seasonComplete && <SeasonCompleteBanner seasonLabel={competition.season.label} />}
       <main className="mx-auto max-w-6xl space-y-6 p-4">

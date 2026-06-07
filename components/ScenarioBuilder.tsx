@@ -5,6 +5,7 @@ import type { Competition, Fixture, Outcome, OutcomeMap, Scenario, Standing, Tea
 import { decodeScenario, encodeScenario } from "@/lib/urlState";
 import { simulate } from "@/lib/simulate";
 import TopBar from "@/components/TopBar";
+import type { SimulateRequest } from "@/components/SimulateMenu";
 import Sidebar from "@/components/Sidebar";
 import SimulationBoard from "@/components/SimulationBoard";
 import ProjectedTable from "@/components/ProjectedTable";
@@ -89,8 +90,11 @@ export default function ScenarioBuilder({ competition, standings, fixtures, fetc
     updateScenario({ ...scenario, outcomes });
   }
 
-  function handleSimulateAll() {
-    const next = simulate(standings, fixtures, scenario.outcomes);
+  function handleSimulate(req: SimulateRequest) {
+    const next = simulate(standings, fixtures, scenario.outcomes, {
+      overwriteUnlocked: req.overwrite,
+      strategy: req.strategy,
+    });
     updateScenario({ ...scenario, outcomes: next });
   }
 
@@ -122,8 +126,9 @@ export default function ScenarioBuilder({ competition, standings, fixtures, fetc
         fixturesLeft={Math.max(0, fixturesLeft)}
         competitionName={competition.name}
         actionsDisabled={predictionsLocked}
+        hasPicks={Object.keys(scenario.outcomes).length > 0}
         onResetPicks={handleResetPicks}
-        onSimulateAll={handleSimulateAll}
+        onSimulate={handleSimulate}
       />
       {seasonComplete && <SeasonCompleteBanner seasonLabel={competition.season.label} />}
       {predictionsLocked && <PredictionLockedBanner played={progress.played} total={progress.total} />}
