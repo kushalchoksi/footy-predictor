@@ -1,7 +1,8 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
-import type { Fixture, Standing, Team } from "@/types";
+import type { Fixture, Standing } from "@/types";
+import { normalizeTeam, standingsFromResponse, standingsResponseSchema } from "@/lib/footballParse";
 
 // ──────────────────────────────────────────────────────────────────────────
 // Discovered tournament fixture shape (football-data.org v4, verified 2026-05-29):
@@ -23,14 +24,6 @@ import type { Fixture, Standing, Team } from "@/types";
 const BASE = "https://api.football-data.org/v4";
 const REVALIDATE_SECONDS = 120;
 
-const teamSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  shortName: z.string().nullable(),
-  tla: z.string().nullable(),
-  crest: z.string().nullable(),
-});
-
 // Knockout fixtures in tournaments can have unresolved teams (placeholders for
 // winners of feeder ties). The API returns all team fields as null in that case.
 const maybeTeamSchema = z.object({
@@ -39,29 +32,6 @@ const maybeTeamSchema = z.object({
   shortName: z.string().nullable(),
   tla: z.string().nullable(),
   crest: z.string().nullable(),
-});
-
-const standingsResponseSchema = z.object({
-  standings: z.array(
-    z.object({
-      stage: z.string(),
-      type: z.string(),
-      table: z.array(
-        z.object({
-          position: z.number(),
-          team: teamSchema,
-          playedGames: z.number(),
-          won: z.number(),
-          draw: z.number(),
-          lost: z.number(),
-          points: z.number(),
-          goalsFor: z.number(),
-          goalsAgainst: z.number(),
-          goalDifference: z.number(),
-        }),
-      ),
-    }),
-  ),
 });
 
 const matchSchema = z.object({
@@ -105,16 +75,6 @@ export interface CompetitionMeta {
   code: string;
   seasonEndDate: string | null;
   hasWinner: boolean;
-}
-
-function normalizeTeam(t: z.infer<typeof teamSchema>): Team {
-  return {
-    id: t.id,
-    name: t.name,
-    shortName: t.shortName ?? t.name,
-    tla: t.tla ?? t.name.slice(0, 3).toUpperCase(),
-    crest: t.crest ?? "",
-  };
 }
 
 function normalizeStage(s: string | null | undefined): import("@/types").TournamentStage | undefined {
@@ -177,20 +137,7 @@ export function getStandings(code: string): Promise<Standing[]> {
     async (): Promise<Standing[]> => {
       const raw = await fetchFromApi(`/competitions/${code}/standings`);
       const parsed = standingsResponseSchema.parse(raw);
-      const total = parsed.standings.find((s) => s.type === "TOTAL");
-      if (!total) throw new Error("No TOTAL standings stage in response");
-      return total.table.map((row) => ({
-        team: normalizeTeam(row.team),
-        position: row.position,
-        playedGames: row.playedGames,
-        won: row.won,
-        draw: row.draw,
-        lost: row.lost,
-        points: row.points,
-        goalsFor: row.goalsFor,
-        goalsAgainst: row.goalsAgainst,
-        goalDifference: row.goalDifference,
-      }));
+      return standingsFromResponse(parsed);
     },
     [`${code}-standings`],
     { revalidate: REVALIDATE_SECONDS },
