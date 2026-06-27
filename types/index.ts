@@ -110,10 +110,26 @@ export interface QualificationBand {
   color: BandColor;
 }
 
+/**
+ * Fixed seed assignment for a first-round bracket slot (group-position based,
+ * e.g. the World Cup's predetermined round-of-32). Distinct from `feederHome`,
+ * which fills a slot from an earlier tie's winner.
+ *   { winner: "A" }   → winner of Group A
+ *   { runnerUp: "A" } → runner-up of Group A
+ *   { thirdFor: "A" } → the best third-placed team that, per the official
+ *                       combination table, faces the winner of Group A
+ */
+export type SeedSlot =
+  | { winner: string }
+  | { runnerUp: string }
+  | { thirdFor: string };
+
 export interface BracketTemplateRound {
   id: string;             // synthetic, e.g. "QF1"
   feederHome?: string;    // tie id whose winner fills the home slot
   feederAway?: string;
+  homeSlot?: SeedSlot;    // fixed first-round seed (group-position based)
+  awaySlot?: SeedSlot;
 }
 
 export interface BracketTemplate {

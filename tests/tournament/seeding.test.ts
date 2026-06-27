@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { seedBracket } from "@/lib/tournament/seeding";
 import { LEAGUE_PHASE_GROUP } from "@/lib/tournament/groupStage";
+import {
+  WC_BRACKET_TEMPLATE,
+  WC_THIRD_COMBINATIONS,
+  WC_WINNER_COLUMNS,
+  assignThirdPlaced,
+} from "@/lib/tournament/worldCup2026";
 import type { Competition, Standing } from "@/types";
 
 function team(id: number) {
@@ -111,5 +117,122 @@ describe("seedBracket — Champions League league phase", () => {
 
   it("returns empty when fewer than 24 teams are present", () => {
     expect(seedBracket(cl, leaguePhase(20)).seeds).toEqual({});
+  });
+});
+
+describe("WC third-place combination table (worldCup2026)", () => {
+  it("has all 495 = C(12,8) combinations, each a permutation of its key", () => {
+    const keys = Object.keys(WC_THIRD_COMBINATIONS);
+    expect(keys).toHaveLength(495);
+    expect(WC_WINNER_COLUMNS).toHaveLength(8);
+    for (const [key, value] of Object.entries(WC_THIRD_COMBINATIONS)) {
+      expect(value).toHaveLength(8);
+      // value is the same eight groups as the key, reordered onto the winners.
+      expect([...value].sort().join("")).toBe(key);
+    }
+  });
+
+  it("maps qualifying thirds onto the official winner columns", () => {
+    // Combination 1 from FIFA Annex C: groups E–L produce the qualifying thirds.
+    const got = assignThirdPlaced(["L", "K", "J", "I", "H", "G", "F", "E"]);
+    expect(got).toEqual({ A: "E", B: "J", D: "I", E: "F", G: "H", I: "G", K: "L", L: "K" });
+  });
+
+  it("rejects an invalid (non eight-of-twelve) set", () => {
+    expect(assignThirdPlaced(["A", "B", "C"])).toBeNull();
+  });
+});
+
+describe("seedBracket — World Cup fixed round of 32", () => {
+  const wc: Competition = {
+    code: "WC", name: "Test WC", country: "X", emblem: "", accent: "#000", flagUrl: "", trophyUrl: "",
+    format: "tournament", tiebreaker: "fifa", season: { startYear: 2026, label: "t" }, groupCount: 12,
+    bracketTemplate: WC_BRACKET_TEMPLATE,
+  };
+
+  const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+  // id scheme: group index g (0–11), position p (0–3) → g*10 + p + 1.
+  const id = (g: number, p: number) => g * 10 + p + 1;
+
+  /** 12 groups of 4, pre-sorted [winner, runner, third, bottom]. Thirds of groups
+   *  E–L get more points than A–D, so the eight best thirds are exactly E–L
+   *  (FIFA combination 1). */
+  function twelveGroups(): Map<string, Standing[]> {
+    const m = new Map<string, Standing[]>();
+    LETTERS.forEach((L, g) => {
+      const thirdPts = g >= 4 ? 5 : 1; // E–L (g≥4) qualify; A–D do not
+      m.set(`GROUP_${L}`, [
+        standing(id(g, 0), 9), // winner
+        standing(id(g, 1), 6), // runner-up
+        standing(id(g, 2), thirdPts), // third
+        standing(id(g, 3), 0), // bottom
+      ]);
+    });
+    return m;
+  }
+
+  it("places winners and runners-up in their fixed slots", () => {
+    const { seeds } = seedBracket(wc, twelveGroups());
+    // M73 = Runner-up A vs Runner-up B
+    expect(seeds["M73"].home?.id).toBe(id(0, 1));
+    expect(seeds["M73"].away?.id).toBe(id(1, 1));
+    // M79 = Winner A vs (third). M74 = Winner E vs (third).
+    expect(seeds["M79"].home?.id).toBe(id(0, 0));
+    expect(seeds["M74"].home?.id).toBe(id(4, 0));
+    // M88 = Runner-up D vs Runner-up G
+    expect(seeds["M88"].home?.id).toBe(id(3, 1));
+    expect(seeds["M88"].away?.id).toBe(id(6, 1));
+  });
+
+  it("assigns the eight best thirds to the correct winners (combination 1)", () => {
+    const { seeds } = seedBracket(wc, twelveGroups());
+    // Per combination EFGHIJKL: A↔3E, B↔3J, D↔3I, E↔3F, G↔3H, I↔3G, K↔3L, L↔3K.
+    const thirdId = (L: string) => id(LETTERS.indexOf(L), 2);
+    expect(seeds["M79"].away?.id).toBe(thirdId("E")); // winner A vs 3rd of E
+    expect(seeds["M85"].away?.id).toBe(thirdId("J")); // winner B vs 3rd of J
+    expect(seeds["M81"].away?.id).toBe(thirdId("I")); // winner D vs 3rd of I
+    expect(seeds["M74"].away?.id).toBe(thirdId("F")); // winner E vs 3rd of F
+    expect(seeds["M82"].away?.id).toBe(thirdId("H")); // winner G vs 3rd of H
+    expect(seeds["M77"].away?.id).toBe(thirdId("G")); // winner I vs 3rd of G
+    expect(seeds["M87"].away?.id).toBe(thirdId("L")); // winner K vs 3rd of L
+    expect(seeds["M80"].away?.id).toBe(thirdId("K")); // winner L vs 3rd of K
+  });
+
+  it("qualifies 32 teams: every top-2 plus the eight best thirds, no one else", () => {
+    const { qualifiedIds } = seedBracket(wc, twelveGroups());
+    expect(qualifiedIds.size).toBe(32);
+    // All bottom-of-group teams excluded.
+    for (let g = 0; g < 12; g++) expect(qualifiedIds.has(id(g, 3))).toBe(false);
+    // Thirds of A–D excluded; thirds of E–L included.
+    for (let g = 0; g < 4; g++) expect(qualifiedIds.has(id(g, 2))).toBe(false);
+    for (let g = 4; g < 12; g++) expect(qualifiedIds.has(id(g, 2))).toBe(true);
+  });
+
+  it("returns empty when the group data can't fill every slot", () => {
+    const partial = new Map<string, Standing[]>([
+      ["GROUP_A", [standing(1, 9), standing(2, 6), standing(3, 3), standing(4, 0)]],
+    ]);
+    expect(seedBracket(wc, partial).seeds).toEqual({});
+  });
+
+  it("matches the real 2026 bracket (combination 67: thirds B,D,E,F,I,J,K,L)", () => {
+    // Mirrors the live round of 32: USA(1D) v 3rd-B, Germany(1E) v 3rd-D,
+    // France(1I) v 3rd-F, Mexico(1A) v 3rd-E.
+    const qualifies = new Set(["B", "D", "E", "F", "I", "J", "K", "L"]);
+    const m = new Map<string, Standing[]>();
+    LETTERS.forEach((L, g) => {
+      m.set(`GROUP_${L}`, [
+        standing(id(g, 0), 9),
+        standing(id(g, 1), 6),
+        standing(id(g, 2), qualifies.has(L) ? 5 : 1),
+        standing(id(g, 3), 0),
+      ]);
+    });
+    const { seeds } = seedBracket(wc, m);
+    const thirdId = (L: string) => id(LETTERS.indexOf(L), 2);
+    expect(seeds["M81"].away?.id).toBe(thirdId("B")); // winner D vs 3rd of B
+    expect(seeds["M74"].away?.id).toBe(thirdId("D")); // winner E vs 3rd of D
+    expect(seeds["M77"].away?.id).toBe(thirdId("F")); // winner I vs 3rd of F
+    expect(seeds["M79"].away?.id).toBe(thirdId("E")); // winner A vs 3rd of E
   });
 });

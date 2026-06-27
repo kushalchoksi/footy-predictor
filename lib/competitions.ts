@@ -1,4 +1,5 @@
 import type { Competition } from "@/types";
+import { WC_BRACKET_TEMPLATE } from "@/lib/tournament/worldCup2026";
 
 export const COMPETITIONS: Competition[] = [
   {
@@ -250,39 +251,10 @@ export const COMPETITIONS: Competition[] = [
     tiebreaker: "fifa",
     season: { startYear: 2026, label: "World Cup 2026" },
     groupCount: 12,
-    bracketTemplate: {
-      rounds: {
-        LAST_32: [
-          { id: "R32-1" }, { id: "R32-2" }, { id: "R32-3" }, { id: "R32-4" },
-          { id: "R32-5" }, { id: "R32-6" }, { id: "R32-7" }, { id: "R32-8" },
-          { id: "R32-9" }, { id: "R32-10" }, { id: "R32-11" }, { id: "R32-12" },
-          { id: "R32-13" }, { id: "R32-14" }, { id: "R32-15" }, { id: "R32-16" },
-        ],
-        LAST_16: [
-          { id: "R16-1", feederHome: "R32-1", feederAway: "R32-2" },
-          { id: "R16-2", feederHome: "R32-3", feederAway: "R32-4" },
-          { id: "R16-3", feederHome: "R32-5", feederAway: "R32-6" },
-          { id: "R16-4", feederHome: "R32-7", feederAway: "R32-8" },
-          { id: "R16-5", feederHome: "R32-9", feederAway: "R32-10" },
-          { id: "R16-6", feederHome: "R32-11", feederAway: "R32-12" },
-          { id: "R16-7", feederHome: "R32-13", feederAway: "R32-14" },
-          { id: "R16-8", feederHome: "R32-15", feederAway: "R32-16" },
-        ],
-        QUARTER_FINALS: [
-          { id: "QF1", feederHome: "R16-1", feederAway: "R16-2" },
-          { id: "QF2", feederHome: "R16-3", feederAway: "R16-4" },
-          { id: "QF3", feederHome: "R16-5", feederAway: "R16-6" },
-          { id: "QF4", feederHome: "R16-7", feederAway: "R16-8" },
-        ],
-        SEMI_FINALS: [
-          { id: "SF1", feederHome: "QF1", feederAway: "QF2" },
-          { id: "SF2", feederHome: "QF3", feederAway: "QF4" },
-        ],
-        FINAL: [
-          { id: "F1", feederHome: "SF1", feederAway: "SF2" },
-        ],
-      },
-    },
+    // Official fixed round-of-32 (top two per group + the eight best thirds via
+    // FIFA's combination table), not generic high-vs-low reseeding. See
+    // lib/tournament/worldCup2026.ts.
+    bracketTemplate: WC_BRACKET_TEMPLATE,
   },
 ];
 
