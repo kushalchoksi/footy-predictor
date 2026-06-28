@@ -3,13 +3,16 @@ import type {
 } from "@/types";
 import { CHAINS } from "@/lib/tiebreakers";
 import { projectGroups, type GroupStageResult } from "@/lib/tournament/groupStage";
-import { buildBracket, resolveBracket } from "@/lib/tournament/bracket";
+import { buildBracket, finishedWinnerId, resolveBracket } from "@/lib/tournament/bracket";
 import { seedBracket } from "@/lib/tournament/seeding";
 
 export interface TournamentProjection {
   groupStandings: Map<string, Standing[]>;
   qualified: Map<string, Team[]>;
   bracket: BracketTie[];
+  /** User picks plus winners forced by real FINISHED knockout results. Drives the
+   *  bracket's winner highlight; finished ties are locked to their real winner. */
+  bracketChoices: Record<string, TeamId>;
   finishingPositions: Map<TeamId, string>;
 }
 
@@ -53,10 +56,16 @@ export function projectTournament(
   const { seeds, qualifiedIds } = seedBracket(competition, groups.groupStandings);
   const seedingActive = qualifiedIds.size > 0;
 
-  // When seeding is active we ignore the API's resolved knockout fixtures — otherwise
-  // later rounds would show the real historical teams, which wouldn't follow from the
-  // simulated first round. Only when we can't seed (no group data) do we fall back to
-  // the API-attached bracket so completed editions still show their real bracket.
+  // When seeding is active we ignore the API's resolved knockout fixtures for the
+  // bracket skeleton — otherwise later rounds would show the real historical teams,
+  // which wouldn't follow from the simulated first round. Only when we can't seed (no
+  // group data) do we fall back to the API-attached bracket.
+  //
+  // Either way, real FINISHED knockout results are overlaid by resolveBracket: a tie
+  // whose projected matchup IS a completed match gets locked to its real winner. This
+  // surfaces results like a played Round-of-32 game while keeping a fully-simulated
+  // bracket editable (a different group sim simply won't match the real matchup).
+  const finishedKnockout = knockoutFixtures.filter((f) => f.status === "FINISHED");
   const ties = competition.bracketTemplate
     ? resolveBracket(
         buildBracket(competition.bracketTemplate, seedingActive ? [] : knockoutFixtures).map((t) => {
@@ -65,8 +74,19 @@ export function projectTournament(
           return { ...t, homeTeam: seed.home ?? t.homeTeam, awayTeam: seed.away ?? t.awayTeam };
         }),
         bracketChoices,
+        finishedKnockout,
       )
     : [];
+
+  // User picks overlaid with winners forced by real results. A locked tie carries its
+  // finished fixture; its actual winner overrides any user pick and feeds the rest of
+  // the projection (winner highlight, advancement, finishing positions).
+  const effectiveChoices: Record<string, TeamId> = { ...bracketChoices };
+  for (const t of ties) {
+    const fix = t.fixtures.find((f) => f.status === "FINISHED");
+    const winnerId = fix && finishedWinnerId(fix);
+    if (winnerId !== undefined) effectiveChoices[t.id] = winnerId;
+  }
 
   // Per-group qualifier highlight derived from the seeding (top two + best thirds,
   // or top 24 for the Champions League league phase), not just the raw top two.
@@ -121,7 +141,7 @@ export function projectTournament(
     if (!stageTies) continue;
     const nextStage = KNOCKOUT_ORDER.slice(i + 1).find((s) => tiesByStage.get(s)?.length);
     for (const tie of stageTies) {
-      const winnerId = bracketChoices[tie.id];
+      const winnerId = effectiveChoices[tie.id];
       if (winnerId === undefined) continue;
       const home = tie.homeTeam;
       const away = tie.awayTeam;
@@ -139,6 +159,7 @@ export function projectTournament(
     groupStandings: groups.groupStandings,
     qualified,
     bracket: ties,
+    bracketChoices: effectiveChoices,
     finishingPositions,
   };
 }

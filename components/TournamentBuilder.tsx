@@ -161,7 +161,7 @@ export default function TournamentBuilder({ competition, standings, fixtures, fe
           <BracketInfo competition={competition} />
           <Bracket
             ties={projection.bracket}
-            choices={scenario.bracketChoices ?? {}}
+            choices={projection.bracketChoices}
             onPick={handlePickWinner}
           />
         </section>

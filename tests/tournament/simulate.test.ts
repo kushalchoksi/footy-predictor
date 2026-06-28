@@ -87,4 +87,32 @@ describe("simulateTournament", () => {
     expect(Object.keys(outcomes).length).toBe(36);
     expect(championsOf(outcomes, bracketChoices)).toHaveLength(1);
   });
+
+  it("does not overwrite a finished knockout result when simulating the bracket", () => {
+    const fixtures = euroGroupFixtures();
+    // Fix every group result (home wins) so the seeding is deterministic.
+    const outcomes: OutcomeMap = {};
+    for (let i = 1; i <= 36; i++) outcomes[i] = { kind: "H", locked: false };
+
+    // Mark one real seeded R16 tie as finished, with the away team winning.
+    const seeded = projectTournament(ec, [], fixtures, outcomes, {})
+      .bracket.find((t) => t.stage === "LAST_16" && t.homeTeam && t.awayTeam)!;
+    const result: Fixture = {
+      id: 9001, matchday: 1, homeTeam: seeded.homeTeam!, awayTeam: seeded.awayTeam!,
+      status: "FINISHED", homeGoals: 0, awayGoals: 2, utcDate: "x", stage: "LAST_16",
+    };
+    const allFixtures = [...fixtures, result];
+
+    // "Simulate rest" keeps the fixed group results, so seeding stays put.
+    const { bracketChoices } = simulateTournament(
+      ec, [], allFixtures, { outcomes },
+      { strategy: "random", scope: "all", overwrite: false, rng: mulberry32(1) },
+    );
+
+    // Simulate must NOT have written a pick for the finished tie...
+    expect(bracketChoices[seeded.id]).toBeUndefined();
+    // ...yet the real winner still advances in the projection.
+    const proj = projectTournament(ec, [], allFixtures, outcomes, bracketChoices);
+    expect(proj.bracketChoices[seeded.id]).toBe(seeded.awayTeam!.id);
+  });
 });

@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { buildBracket, resolveBracket } from "@/lib/tournament/bracket";
+import { buildBracket, finishedWinnerId, resolveBracket } from "@/lib/tournament/bracket";
 import type { BracketTemplate, Fixture, Team } from "@/types";
 
 function team(id: number, name: string): Team {
   return { id, name, shortName: name, tla: name.slice(0, 3).toUpperCase(), crest: "" };
+}
+
+function finished(id: number, home: Team, away: Team, hg: number, ag: number, extra: Partial<Fixture> = {}): Fixture {
+  return {
+    id, matchday: 1, homeTeam: home, awayTeam: away, status: "FINISHED",
+    homeGoals: hg, awayGoals: ag, utcDate: "x", stage: "LAST_16", ...extra,
+  };
 }
 
 const template: BracketTemplate = {
@@ -27,6 +34,27 @@ const template: BracketTemplate = {
     ],
   },
 };
+
+describe("finishedWinnerId", () => {
+  const a = team(1, "A"), b = team(2, "B");
+
+  it("returns the higher scorer of a finished match", () => {
+    expect(finishedWinnerId(finished(1, a, b, 2, 1))).toBe(a.id);
+    expect(finishedWinnerId(finished(1, a, b, 0, 3))).toBe(b.id);
+  });
+
+  it("breaks a drawn knockout tie by the penalty shoot-out score", () => {
+    expect(finishedWinnerId(finished(1, a, b, 1, 1, { homePenalties: 4, awayPenalties: 5 }))).toBe(b.id);
+    expect(finishedWinnerId(finished(1, a, b, 0, 0, { homePenalties: 3, awayPenalties: 1 }))).toBe(a.id);
+  });
+
+  it("is undefined when the match is unfinished or undecided", () => {
+    const scheduled: Fixture = { ...finished(1, a, b, 0, 0), status: "SCHEDULED", homeGoals: null, awayGoals: null };
+    expect(finishedWinnerId(scheduled)).toBeUndefined();
+    // Drawn with no shoot-out data → winner can't be determined.
+    expect(finishedWinnerId(finished(1, a, b, 1, 1))).toBeUndefined();
+  });
+});
 
 describe("buildBracket", () => {
   it("builds a tie per template round with empty fixtures and no resolved teams", () => {
@@ -86,5 +114,61 @@ describe("resolveBracket", () => {
     const qf1 = resolved.find((t) => t.id === "QF1")!;
     expect(qf1.homeTeam).toBeUndefined();
     expect(qf1.awayTeam).toBeUndefined();
+  });
+
+  it("locks a tie to a real finished result and advances the actual winner over a user pick", () => {
+    const a = team(1, "A"), b = team(2, "B");
+    // Seed R16-1 = A vs B, as the projection does after seeding the first round.
+    const ties = buildBracket(template, []).map((t) =>
+      t.id === "R16-1" ? { ...t, homeTeam: a, awayTeam: b } : t,
+    );
+    // The real match finished with B winning — note the API's home/away order is
+    // swapped versus the bracket layout, so matching must be order-independent.
+    const result = finished(50, b, a, 2, 0, { stage: "LAST_16" });
+    // The user wrongly tries to pick A; the real result must win.
+    const resolved = resolveBracket(ties, { "R16-1": a.id }, [result]);
+
+    const r16 = resolved.find((t) => t.id === "R16-1")!;
+    expect(r16.fixtures.some((f) => f.status === "FINISHED")).toBe(true);
+    const qf1 = resolved.find((t) => t.id === "QF1")!;
+    expect(qf1.homeTeam?.id).toBe(b.id); // real winner advanced, not the user's pick
+  });
+
+  it("does not lock a tie when the finished result is from a different round", () => {
+    const a = team(1, "A"), b = team(2, "B");
+    const ties = buildBracket(template, []).map((t) =>
+      t.id === "R16-1" ? { ...t, homeTeam: a, awayTeam: b } : t,
+    );
+    // Same pairing, but the finished fixture is a QUARTER_FINAL — must NOT match the R16 tie.
+    const result = finished(51, a, b, 3, 0, { stage: "QUARTER_FINALS" });
+    const resolved = resolveBracket(ties, {}, [result]);
+    const r16 = resolved.find((t) => t.id === "R16-1")!;
+    expect(r16.fixtures.some((f) => f.status === "FINISHED")).toBe(false);
+  });
+
+  it("cascades real results across rounds: a finished QF locks once its R16 feeders are decided", () => {
+    const a = team(1, "A"), b = team(2, "B"), c = team(3, "C"), d = team(4, "D");
+    // Seed the two R16 ties that feed QF1.
+    const ties = buildBracket(template, []).map((t) => {
+      if (t.id === "R16-1") return { ...t, homeTeam: a, awayTeam: b };
+      if (t.id === "R16-2") return { ...t, homeTeam: c, awayTeam: d };
+      return t;
+    });
+    // Both R16 games are played (B and C win), AND the QF they feed is played (B wins).
+    const finishedFixtures = [
+      finished(60, a, b, 0, 1, { stage: "LAST_16" }),        // B beats A
+      finished(61, c, d, 2, 0, { stage: "LAST_16" }),        // C beats D
+      finished(62, b, c, 1, 1, { stage: "QUARTER_FINALS", homePenalties: 4, awayPenalties: 2 }), // B beats C on pens
+    ];
+    const resolved = resolveBracket(ties, {}, finishedFixtures);
+
+    // The QF resolved to the real pairing (B vs C) and locked to the real winner...
+    const qf1 = resolved.find((t) => t.id === "QF1")!;
+    expect(qf1.homeTeam?.id).toBe(b.id);
+    expect(qf1.awayTeam?.id).toBe(c.id);
+    expect(qf1.fixtures.some((f) => f.status === "FINISHED")).toBe(true);
+    // ...and B advances into the semi-final.
+    const sf1 = resolved.find((t) => t.id === "SF1")!;
+    expect(sf1.homeTeam?.id).toBe(b.id);
   });
 });

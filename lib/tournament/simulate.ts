@@ -109,6 +109,9 @@ export function simulateTournament(
     let picked = 0;
     for (const tie of projection.bracket) {
       if (!tie.homeTeam || !tie.awayTeam) continue;
+      // A tie that's already been played carries its fixture and is locked to the
+      // real winner by the projection — never overwrite it with a simulated pick.
+      if (tie.fixtures.some((f) => f.status === "FINISHED")) continue;
       const existing = choices[tie.id];
       // Keep a valid existing pick; drop one that no longer names either team here.
       if (existing !== undefined) {

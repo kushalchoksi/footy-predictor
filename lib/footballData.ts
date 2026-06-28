@@ -48,6 +48,13 @@ const matchSchema = z.object({
       home: z.number().nullable(),
       away: z.number().nullable(),
     }),
+    // Present only for knockout ties decided on penalties; absent/null otherwise.
+    penalties: z
+      .object({
+        home: z.number().nullable(),
+        away: z.number().nullable(),
+      })
+      .nullish(),
   }),
 });
 
@@ -172,6 +179,8 @@ export function getFixtures(code: string): Promise<Fixture[]> {
           status: m.status === "FINISHED" ? "FINISHED" as const : "SCHEDULED" as const,
           homeGoals: m.score.fullTime.home,
           awayGoals: m.score.fullTime.away,
+          homePenalties: m.score.penalties?.home ?? null,
+          awayPenalties: m.score.penalties?.away ?? null,
           utcDate: m.utcDate,
           group: m.group ?? undefined,
           stage: normalizeStage(m.stage),

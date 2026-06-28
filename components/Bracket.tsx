@@ -132,6 +132,15 @@ export default function Bracket({ ties, choices, onPick }: Props) {
   );
 }
 
+/** A team's goals (and shoot-out score) in a finished fixture, matched by id so it
+ *  works regardless of the API's home/away order versus the bracket layout. */
+function scoreFor(fixture: BracketTie["fixtures"][number], teamId: TeamId | undefined) {
+  if (teamId === undefined) return undefined;
+  if (fixture.homeTeam.id === teamId) return { goals: fixture.homeGoals, pens: fixture.homePenalties };
+  if (fixture.awayTeam.id === teamId) return { goals: fixture.awayGoals, pens: fixture.awayPenalties };
+  return undefined;
+}
+
 function BracketTieCard({
   tie, winnerId, onPick,
 }: {
@@ -139,41 +148,60 @@ function BracketTieCard({
   winnerId: TeamId | undefined;
   onPick: (tieId: string, teamId: TeamId) => void;
 }) {
+  // A completed real match: locked to its result, not re-selectable.
+  const fixture = tie.fixtures.find((f) => f.status === "FINISHED");
   return (
     <div className="rounded border border-border bg-surface shadow-sm">
-      <Slot tie={tie} team={tie.homeTeam} feeder={tie.feederHome} winnerId={winnerId} onPick={onPick} />
+      <Slot
+        tie={tie} team={tie.homeTeam} feeder={tie.feederHome} winnerId={winnerId} onPick={onPick}
+        locked={!!fixture} score={fixture && scoreFor(fixture, tie.homeTeam?.id)}
+      />
       <div className="border-t border-border" />
-      <Slot tie={tie} team={tie.awayTeam} feeder={tie.feederAway} winnerId={winnerId} onPick={onPick} />
+      <Slot
+        tie={tie} team={tie.awayTeam} feeder={tie.feederAway} winnerId={winnerId} onPick={onPick}
+        locked={!!fixture} score={fixture && scoreFor(fixture, tie.awayTeam?.id)}
+      />
     </div>
   );
 }
 
 function Slot({
-  tie, team, feeder, winnerId, onPick,
+  tie, team, feeder, winnerId, onPick, locked, score,
 }: {
   tie: BracketTie;
   team: BracketTie["homeTeam"];
   feeder: string | undefined;
   winnerId: TeamId | undefined;
   onPick: (tieId: string, teamId: TeamId) => void;
+  locked: boolean;
+  score: { goals: number | null; pens?: number | null } | undefined;
 }) {
   const isWinner = team && winnerId === team.id;
-  const clickable = !!team;
+  const clickable = !!team && !locked;
+  const tone = isWinner
+    ? "bg-emerald-100 font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+    : "text-muted";
   return (
     <button
       type="button"
       disabled={!clickable}
-      onClick={() => team && onPick(tie.id, team.id)}
+      onClick={() => clickable && team && onPick(tie.id, team.id)}
+      title={locked ? "Completed match — result is final" : undefined}
       className={
         "flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition " +
-        (clickable ? "hover:bg-surface-2 " : "cursor-not-allowed text-faint ") +
-        (isWinner ? "bg-emerald-100 font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200" : "text-muted")
+        (clickable ? "hover:bg-surface-2 " : "cursor-not-allowed ") +
+        (team ? tone : "text-faint ")
       }
     >
       {team ? (
         <>
           <TeamCrest team={team} size={14} />
           <span className="min-w-0 truncate">{team.shortName}</span>
+          {score && score.goals !== null && (
+            <span className="ml-auto shrink-0 tabular-nums text-faint">
+              {score.goals}{score.pens != null ? ` (${score.pens})` : ""}
+            </span>
+          )}
         </>
       ) : (
         <span className="min-w-0 truncate italic text-faint">Winner of {feeder ?? "TBD"}</span>

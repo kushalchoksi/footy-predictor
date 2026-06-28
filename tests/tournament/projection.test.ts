@@ -61,4 +61,45 @@ describe("projectTournament", () => {
     // EC template has 8+4+2+1 = 15 ties (R16, QF, SF, FINAL)
     expect(result.bracket.length).toBe(15);
   });
+
+  it("surfaces a finished knockout result: locks the tie and advances the real winner", () => {
+    const ec = getCompetition("EC")!;
+    // Six full groups (home always wins) so the 16-slot bracket seeds deterministically.
+    const fixtures: Fixture[] = [];
+    const outcomes: Record<number, { kind: "H"; locked: boolean }> = {};
+    let fid = 1;
+    ["A", "B", "C", "D", "E", "F"].forEach((L, gi) => {
+      const base = gi * 10;
+      const t = (r: number) => team(base + r, `${L}${r}`);
+      const pairs: [number, number][] = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]];
+      for (const [h, a] of pairs) {
+        fixtures.push({
+          id: fid, matchday: 1, homeTeam: t(h), awayTeam: t(a), status: "SCHEDULED",
+          homeGoals: null, awayGoals: null, utcDate: "x", group: `GROUP_${L}`, stage: "GROUP_STAGE",
+        });
+        outcomes[fid] = { kind: "H", locked: false };
+        fid++;
+      }
+    });
+
+    // Discover a real seeded R16 pairing from a first projection (no finished games yet).
+    const before = projectTournament(ec, [], fixtures, outcomes, {});
+    const seeded = before.bracket.find((t) => t.stage === "LAST_16" && t.homeTeam && t.awayTeam)!;
+    const home = seeded.homeTeam!, away = seeded.awayTeam!;
+
+    // The real R16 match finished with the away side winning 1–0.
+    const result: Fixture = {
+      id: 9001, matchday: 1, homeTeam: home, awayTeam: away, status: "FINISHED",
+      homeGoals: 0, awayGoals: 1, utcDate: "x", stage: "LAST_16",
+    };
+    const after = projectTournament(ec, [], [...fixtures, result], outcomes, {});
+
+    const lockedTie = after.bracket.find((t) => t.id === seeded.id)!;
+    expect(lockedTie.fixtures.some((f) => f.status === "FINISHED")).toBe(true);
+    // The real winner is forced into the effective choices, regardless of user input.
+    expect(after.bracketChoices[seeded.id]).toBe(away.id);
+    // ...and finishing positions reflect the real result.
+    expect(after.finishingPositions.get(away.id)).toBe("QF");
+    expect(after.finishingPositions.get(home.id)).toBe("R16");
+  });
 });

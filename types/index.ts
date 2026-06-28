@@ -39,6 +39,9 @@ export interface Fixture {
   status: FixtureStatus;
   homeGoals: number | null;
   awayGoals: number | null;
+  /** Penalty shoot-out scores, for FINISHED knockout ties drawn after extra time. */
+  homePenalties?: number | null;
+  awayPenalties?: number | null;
   utcDate: string;
   group?: string;
   stage?: TournamentStage;
